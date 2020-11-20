@@ -1,2 +1,2 @@
 # cpp_nano
-A console text editor written in C++
+A work in progress console text editor written in C++.
