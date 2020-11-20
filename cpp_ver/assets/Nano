@@ -1,0 +1,143 @@
+#ifndef NANO_CPP_MAIN
+#define NANO_CPP_MAIN
+
+#ifdef _WIN32
+#define NANO_CPP_MAIN_LINE_FEED_TEXT "\n\r"
+#elif __linux__
+#define NANO_CPP_MAIN_LINE_FEED_TEXT "\n"
+#endif
+
+#include <iostream>
+#include <vector>
+#include <conio.h>
+#include "Ekran"
+#include "Input_Engine"
+
+using std::string;
+
+class Nano
+{
+private:
+    Ekran ekran;
+    string message;
+    // TODO: zamijeniti vector sa linked list strukturom zbog ubacivanja usred popisa
+    std::vector<string> buffer;
+
+    bool string_replace(std::string& str, const std::string& from, const std::string& to);
+
+public:
+
+    Nano(std::vector<string> content=std::vector<string>(), int width=115, int height=30, char border='@', char background=' ') : buffer(content), ekran(Ekran(width, height, border, background)), message(string())
+    {
+        if (buffer.size() == 0)
+        {
+            buffer.push_back("");
+        }
+
+        for (int i = 0; i < buffer.size(); ++i)
+        {
+            // Keep replacing tabs in row until all have been removed
+            while(string_replace(buffer[i], "\t", "    ") == true);
+            while(string_replace(buffer[i], "\r", "") == true);
+        }
+        
+        {
+        // std::cout << "Processing...\nBEGIN\n";
+        // for (auto it = content.begin(); it != content.end(); ++it)
+        //     std::cout << "Line>" << *it << "\n";
+        // std::cout << "END\n";
+        }
+    }
+
+    void run()
+    {
+        std::cout << "Press any button to start and ESCAPE to exit.\nThis program switches all tabs to four spaces.\n";
+
+        struct Pointer {
+            int x=1, y=1;
+        } ptr;
+        Input_Engine engine = Input_Engine(buffer, ptr.x, ptr.y, ekran);
+
+        int ch = getch();
+        // while char not ESCAPE
+        while (ch != 27)
+        {
+            ekran.clear();
+            // ekran.set_lines(buffer);
+            ekran.set_certain_lines(engine.paginated_start(), engine.paginated_end());
+            ekran.set_pointer(ptr.x, ptr.y);
+
+            std::cout << *ekran;
+            // if (message.length() > 0)
+            //     std::cout << message << '\n';
+            // message += 'a';
+
+            ch = engine.get_and_process_input();
+        }
+    }
+
+    string get_content()
+    {
+        if (buffer.size() == 0)
+            return "";
+        if (buffer.size() == 1)
+            return buffer[0];
+
+        int size = 0;
+        for (auto it = buffer.begin(); it != buffer.end(); ++it)
+            size += it->length();
+        
+        string output;
+        output.reserve(size);
+
+        output += buffer[0];
+        for (auto it = buffer.begin() + 1; it != buffer.end(); ++it)
+        {
+            output += NANO_CPP_MAIN_LINE_FEED_TEXT + *it;
+        }
+        
+        // std::cout << "Returning content\nBEGIN\n" << output << "\nEND\n";
+        return output;
+    }
+
+    ~Nano() {}
+};
+
+bool Nano::string_replace(std::string& str, const std::string& from, const std::string& to)
+{
+    size_t start_pos = str.find(from);
+    if(start_pos == std::string::npos)
+        return false;
+    str.replace(start_pos, from.length(), to);
+    return true;
+}
+
+/*
+    je li kontrolni znak
+    int is_control(int char_code);
+        case 8:
+            // BACKSPACE
+        case 9:
+            // HORIZONTAL TAB
+        case 10:
+            // ENTER
+        case 27:
+            // ESCAPE
+        case 224:
+            return 1;
+            break;
+
+    Printable ASCII:
+    ! " # $ % & ' ( ) * + , - . / 
+    0 1 2 3 4 5 6 7 8 9 : ; < = > ? 
+    @ A B C D E F G H I J K L M N O 
+    P Q R S T U V W X Y Z [ \ ] ^ _ 
+    ` a b c d e f g h i j k l m n o 
+    p q r s t u v w x y z { | } ~
+    int is_printable(int char_code)
+    {
+        return char_code > 31 && char_code < 127;
+    }
+*/
+
+#endif

@@ -1,0 +1,200 @@
+#ifndef NANO_CPP_EKRAN
+#define NANO_CPP_EKRAN
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+using std::string;
+
+class Ekran
+{
+private:
+    string ekran;
+
+    int width, height;
+
+    struct Skin
+    {
+        char bg, wall;
+    } skin;
+
+    void setup()
+    {
+        ekran = std::string(width * height, skin.bg);
+
+        // Initialize borders
+        set_walls();
+    }
+
+    char& _ch(int x_coord, int y_coord)
+    {
+        return ekran[y_coord * width + x_coord];
+    }
+
+    // Make room for pointer
+    void set_walls()
+    {
+        for (int x_coord = 0; x_coord < width; ++x_coord)
+        {
+            // upper and bottom edge
+            ekran[x_coord] = skin.wall;
+            ekran[(height - 1) * width + x_coord] = skin.wall;
+        }
+        for (int y_coord = 0; y_coord < height; ++y_coord)
+        {
+            // left and right edge
+            ekran[y_coord * width] = skin.wall;
+            ekran[y_coord * width + width - 1] = skin.wall;
+        }
+    }
+
+public:
+
+    Ekran(int width, int height, char border, char background) : width(width), height(height)
+    {
+        if (width < 115 || height < 30)
+            throw "Dimensions mustn't be smaller than 115x30.";
+        skin.bg = background;
+        skin.wall = border;
+        setup();
+    }
+
+    ~Ekran() {}
+
+    void clear()
+    {
+        for (int i = 1; i < this->width - 1; ++i)
+            for (int j = 1; j < this->height - 1; ++j)
+                ekran[j * width + i] = skin.bg;
+    }
+
+    void set_pointer(int x, int y)
+    {
+        set_walls();
+        _ch(x, 0) = 'V';
+        _ch(0, y) = '>';
+    }
+
+    // Set a line to the screen
+    void set_line(const string& s, int y_coord, int x_coord=1)
+    {
+        if (y_coord < 1 || y_coord > height - 2 || x_coord < 1 || x_coord > width - 2 || s.length() == 0)
+            return;
+
+        int idx = 0;
+        while (idx < s.length() && x_coord > 0 && x_coord < width - 1)
+        {
+            _ch(x_coord, y_coord) = s[idx];
+            ++x_coord;
+            ++idx;
+        }
+    }
+
+    void set_lines(const std::vector<string>& lines, int y_coord_start=1, int x_coord=1)
+    {
+        if (x_coord < 1 || x_coord > width - 2)
+            return;
+
+        // for each line print but y coord must be on screen
+        int y_coord_max = -1;
+        for (int idx=0, y_coord=y_coord_start; idx < lines.size() && y_coord > 0 && y_coord < this->width - 1; ++idx, ++y_coord)
+        {
+            set_line(lines[idx], y_coord, x_coord);
+y_coord_max=y_coord;
+        }
+
+        set_line(string(this->width - 2, '~'), y_coord_max + 1, x_coord);
+    }
+
+    void set_certain_lines(std::vector<string>::iterator& line_it, std::vector<string>::iterator& lines_end, int y_coord_start=1, int x_coord=1)
+    {
+        if (x_coord < 1 || x_coord > width - 2)
+            return;
+
+        // for each line print but y coord must be on screen
+        int y_coord_max = -1;
+        for (int y_coord=y_coord_start; line_it != lines_end && y_coord > 0 && y_coord < this->width - 1; ++line_it, ++y_coord)
+        {
+            set_line(*line_it, y_coord, x_coord);
+            y_coord_max=y_coord;
+        }
+        set_line(string(this->width - 2, '~'), y_coord_max + 1, x_coord);
+    }
+
+    // Entire screen dimensions getters
+    int get_width() const { return this->width; }
+    int get_height() const { return this->height; }
+    // Writeable dimension getters (entire screen excluding walls)
+    int get_width_writeable() const { return this->width-2; }
+    int get_height_writeable() const { return this->height-2; }
+
+    string& operator *()
+    {
+        return ekran;
+    }
+
+};
+
+/*
+indeks od koordinata
+int get_idx(int x, int y);
+
+x od indeksa
+int get_x(int idx);
+
+y od indeksa
+int get_y(int idx);
+
+postavi u buffer[x][y]
+void set_idx(char *buff, int x, int y, char c);
+
+upisi string u ekran od koordinate
+void sn_ispis(char *ulaz, int max, char *upis);
+
+dohvati adresu buffera prema koordinatama
+char *get_addr(char *buff, int x, int y);
+
+izracunaj duljinu stringa
+int str_len(char *str);
+
+upisi string u ekran prema koordinatama
+void upisi_ekran(char *ekran, int x, int y, char *str);
+
+upisi linije stringa odijeljene znakom \n u buffer
+void upisi_linije_ekran(char *ekran, char* linije, int pocetna_linija);
+
+izbrisi znak i pomakni znakove u lijevo
+void izbrisi_char(char *ekran, int x, int y);
+
+je li kontrolni znak
+int is_control(int char_code);
+	case 8:
+		// BACKSPACE
+	case 9:
+		// HORIZONTAL TAB
+	case 10:
+		// ENTER
+	case 27:
+		// ESCAPE
+	case 224:
+		return 1;
+		break;
+
+Printable ASCII:
+  ! " # $ % & ' ( ) * + , - . / 
+0 1 2 3 4 5 6 7 8 9 : ; < = > ? 
+@ A B C D E F G H I J K L M N O 
+P Q R S T U V W X Y Z [ \ ] ^ _ 
+` a b c d e f g h i j k l m n o 
+p q r s t u v w x y z { | } ~
+int is_printable(int char_code)
+{
+	return char_code > 31 && char_code < 127;
+}
+
+napuni ekran rubovima i pozadinom
+void postavi_ekran(char *ekran);
+*/
+
+#endif
