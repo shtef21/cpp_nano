@@ -1,7 +1,6 @@
 // Generic includes
 #include <iostream>
 #include <fstream>
-#include <algorithm>
 
 // Containers
 #include <vector>
@@ -9,19 +8,9 @@
 
 // User includes
 #include "assets\Nano"
-#include "assets\curr_dir.h"
 
 using std::string;
 
-namespace String
-{
-    std::vector<string> split(const string& text, std::string delimiter);
-    void remove(string& text, char c);
-    void remove(string& text, string characters_to_remove);
-}
-
-string get_curr_dir();
-string read_file(string abs_file_path);
 void ending_dialogue(string abs_file_path, string content);
 
 int main(int argc, char *argv[])
@@ -31,33 +20,15 @@ int main(int argc, char *argv[])
         std::cout << "You are missing the file name.\n";
         exit(EXIT_FAILURE);
     }
-    string file_name = argv[1];
-    string abs_file_path = get_curr_dir() + file_name;
+    string abs_file_path = NANO::Files::get_curr_dir() + argv[1];
 
-    {
-        string file_content = read_file(abs_file_path);
-        
-        std::cout << "File content:\nBEGIN\n" << file_content << "\nEND\n";
-        String::remove(file_content, '\r');
-        std::cout << "File content:\nBEGIN\n" << file_content << "\nEND\n";
-        
-        std::vector<string> lines = String::split(file_content, "\n");
+	string file_content = NANO::Files::read_file(abs_file_path);       
+	std::vector<string> lines = NANO::Str::split(file_content, "\n");
 
+	Nano nano(lines);
+	nano.run();
 
-        {
-        std::cout << "Sending...\nBEGIN\n";
-        for (auto it = lines.begin(); it != lines.end(); ++it)
-            std::cout << "Line>" << *it << "\n";
-        std::cout << "END\n";
-        }
-
-        Nano nano(lines);
-        nano.run();
-
-        ending_dialogue(abs_file_path, nano.get_content());
-    }
-
-    
+	ending_dialogue(abs_file_path, nano.get_content());
 
     return 0;
 }
@@ -98,69 +69,4 @@ void ending_dialogue(string abs_file_path, string content)
         }
 
     }
-}
-
-string get_curr_dir()
-{
-    char buff[500]={};
-    curr_dir(buff, 500);
-    return std::move(string(buff) + '\\');
-}
-
-string read_file(string abs_file_path)
-{
-    std::ifstream ifs = std::ifstream(abs_file_path);
-    if (!ifs)
-    {
-        std::cout << "File does not exist.\n";
-        exit(EXIT_FAILURE);
-    }
-    string file_content = string(std::istreambuf_iterator<char>(ifs),(std::istreambuf_iterator<char>()));
-    ifs.close();
-    return file_content;
-}
-
-std::vector<string> String::split(const string& text, std::string delimiter)
-{
-    std::vector<string> lines;
-
-    for (auto it = text.begin(); it != text.end(); ++it)
-    {
-        string s = "";
-        while (*it != '\n' && it != text.end())
-        {
-            s += *it;
-            ++it;
-        }
-        if (it != text.end())
-        {
-            if (*it == '\n')
-                ++it;
-        }
-        lines.push_back(s);
-    }
-    return lines;
-
-    /*
-    std::vector<string> lines;
-    auto start = 0U;
-    auto end = text.find(delimiter);
-    while (end != std::string::npos)
-    {
-        lines.push_back(text.substr(start, end - start));
-        start = end + delimiter.length();
-        end = text.find(delimiter, start);
-    }
-    return lines;*/
-}
-
-void String::remove(string& text, char c)
-{
-    text.erase(std::remove(text.begin(), text.end(), c), text.end());
-}
-
-void String::remove(string& text, string characters_to_remove)
-{
-    for (auto it = characters_to_remove.begin(); it != characters_to_remove.end(); ++it)
-        remove(text, *it);
 }
