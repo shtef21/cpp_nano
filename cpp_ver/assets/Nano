@@ -15,6 +15,18 @@
 
 using std::string;
 
+// Helper functions 
+namespace NANO
+{
+	namespace Buff
+	{
+		// Put string to vec[y][x] 
+		bool put(std::vector<string>& b, string s, int idx_y, int idx_x);
+		// Paste string to vector
+		bool paste(std::vector<string>& b, const std::vector<string>& s_list, int idx_y, int idx_x);
+    } 
+} 
+
 class Nano
 {
 private:
@@ -111,6 +123,55 @@ bool Nano::string_replace(std::string& str, const std::string& from, const std::
     str.replace(start_pos, from.length(), to);
     return true;
 }
+
+bool NANO::Buff::put(std::vector<string>& b, const string& s, unsigned int idx_y, unsigned int idx_x)
+{
+	if (idx_y < b.size() && idx_x <= b[idx_y].length())
+	{
+		if (idx_x==0)
+			b[idx_y] = s+b[idx_y];
+		else if (idx_x==b[idx_y])
+			b[idx_y] += s;
+		else
+			b[idx_y] = b[idx_y].substr(0,idx_x) + s + b[idx_y].substr(idx_x);
+		return true;
+	} 
+	return false;
+} 
+
+bool NANO::Buff::paste(std::vector<string>& b, const std::vector<string>& s_list, int idx_y, int idx_x)
+{
+	if (s_list.size() == 0)
+		return false;
+	if (s_list.size() == 1)
+		return NANO::Buff::put(b, s_list[0], idx_y, idx_x);
+		
+	if (idx_y < b.size() && idx_x <= b[idx_y].length())
+	{
+		string sb = "";
+		string se = "";
+		if (idx_x == 0)
+			se = b[idx_y];
+		else if (idx_x == b[idx_y].length())
+			sb = b[idx_y];
+		else
+		{
+			sb = b[idx_y].substr(0, idx_x); 
+			se = b[idx_y].substr(idx_x);
+		}
+		
+		auto itb = s_list.begin();
+		auto ite = s_list.end(); 
+
+		b[idx_y] = sb + *(itb++);
+		b.insert(b.begin() + idx_y + 1, *(--ite));
+		while (itb != ite)
+			b.insert(b.begin() + idx_y + 1, *(itb++);
+
+		return true;
+	} 
+	return false;
+} 
 
 /*
     je li kontrolni znak
