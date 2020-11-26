@@ -21,15 +21,12 @@ int main(int argc, char *argv[])
         exit(EXIT_FAILURE);
     }
     string abs_file_path = NANO::Files::get_curr_dir() + argv[1];
-
-	string file_content = NANO::Files::read_file(abs_file_path);       
-	std::vector<string> lines = NANO::Str::split(file_content, "\n");
+	std::vector<string> lines = NANO::Files::read_file_lines(abs_file_path);
 
 	Nano nano(lines);
 	nano.run();
 
 	ending_dialogue(abs_file_path, nano.get_content());
-
     return 0;
 }
 

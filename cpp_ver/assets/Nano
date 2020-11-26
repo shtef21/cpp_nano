@@ -8,7 +8,7 @@
 #endif
 
 #include <iostream>
-#inclde <algorithm>
+#include <algorithm>
 #include <vector>
 #include <conio.h>
 #include "Ekran"
@@ -23,14 +23,15 @@ namespace NANO
 	namespace Buff
 	{
 		// Put string to vec[y][x] 
-		bool put(std::vector<string>& b, string s, int idx_y, int idx_x);
+		bool put(std::vector<string>& b, const string& s, int idx_y, int idx_x);
 		// Paste string to vector
 		bool paste(std::vector<string>& b, const std::vector<string>& s_list, int idx_y, int idx_x);
     }
 	
 	namespace Str
 	{
-		std::vector<string> split(const string& text, std::string delimiter);
+		std::vector<string> split(const string& text, char delimiter);
+        bool replace(std::string& str, const std::string& from, const std::string& to);
 		void remove(string& text, char c);
 		void remove(string& text, string characters_to_remove);
 	}
@@ -39,6 +40,7 @@ namespace NANO
 	{
 		string get_curr_dir();
 		string read_file(string abs_file_path);
+		std::vector<string> read_file_lines(string abs_file_path);
 	}
 } 
 
@@ -50,31 +52,9 @@ private:
     // TODO: zamijeniti vector sa linked list strukturom zbog ubacivanja usred popisa
     std::vector<string> buffer;
 
-    bool string_replace(std::string& str, const std::string& from, const std::string& to);
-
 public:
 
-    Nano(std::vector<string> content=std::vector<string>(), int width=115, int height=30, char border='@', char background=' ') : buffer(content), ekran(Ekran(width, height, border, background)), message(string())
-    {
-        if (buffer.size() == 0)
-        {
-            buffer.push_back("");
-        }
-
-        for (int i = 0; i < buffer.size(); ++i)
-        {
-            // Keep replacing tabs in row until all have been removed
-            while(string_replace(buffer[i], "\t", "    ") == true);
-            while(string_replace(buffer[i], "\r", "") == true);
-        }
-        
-        {
-        // std::cout << "Processing...\nBEGIN\n";
-        // for (auto it = content.begin(); it != content.end(); ++it)
-        //     std::cout << "Line>" << *it << "\n";
-        // std::cout << "END\n";
-        }
-    }
+    Nano(std::vector<string> content=std::vector<string>(), int width=115, int height=30, char border='@', char background=' ');
 
     void run()
     {
@@ -83,16 +63,17 @@ public:
         struct Pointer {
             int x=1, y=1;
         } ptr;
-        Input_Engine engine = Input_Engine(buffer, ptr.x, ptr.y, ekran);
+        Input_Engine engine = Input_Engine(this->buffer, this->ekran);
 
         int ch = getch();
         // while char not ESCAPE
         while (ch != 27)
         {
-            ekran.clear();
+            this->ekran.clear();
             // ekran.set_lines(buffer);
-            ekran.set_certain_lines(engine.paginated_start(), engine.paginated_end());
-            ekran.set_pointer(ptr.x, ptr.y);
+            this->ekran.set_certain_lines(engine.paginated_start(), engine.paginated_end());
+            // Indexes go from 0 to <len, but that is +1 index on screen because of its borders
+            this->ekran.set_pointer(engine.get_virtual_x_idx() + 1, engine.get_virtual_y_idx() + 1);
 
             std::cout << *ekran;
             // if (message.length() > 0)
@@ -122,15 +103,13 @@ public:
         {
             output += NANO_CPP_MAIN_LINE_FEED_TEXT + *it;
         }
-        
-        // std::cout << "Returning content\nBEGIN\n" << output << "\nEND\n";
         return output;
     }
 
     ~Nano() {}
 };
 
-bool Nano::string_replace(std::string& str, const std::string& from, const std::string& to)
+bool NANO::Str::replace(std::string& str, const std::string& from, const std::string& to)
 {
     size_t start_pos = str.find(from);
     if(start_pos == std::string::npos)
@@ -139,7 +118,7 @@ bool Nano::string_replace(std::string& str, const std::string& from, const std::
     return true;
 }
 
-bool NANO::Buff::put(std::vector<string>& b, const string& s, unsigned int idx_y, unsigned int idx_x)
+bool NANO::Buff::put(std::vector<string>& b, const string& s, int idx_y, int idx_x)
 {
 	if (idx_y < b.size() && idx_x <= b[idx_y].length())
 	{
@@ -188,28 +167,30 @@ bool NANO::Buff::paste(std::vector<string>& b, const std::vector<string>& s_list
 	return false;
 }
 
-std::vector<string> NANO::Str::split(const string& text, std::string delimiter)
+std::vector<string> NANO::Str::split(const string& text, char delimiter)
 {
-    std::vector<string> lines;
-
-    for (auto it = text.begin(); it != text.end(); ++it)
+    if (text.length() == 0)
     {
-        string s = "";
-        while (*it != '\n' && it != text.end())
-        {
-            s += *it;
-            ++it;
-        }
-        if (it != text.end())
-        {
-            if (*it == '\n')
-                ++it;
-        }
-        lines.push_back(s);
+        return std::vector<string>();
     }
-    return lines;
+    unsigned int count = 0;
+    for (int i = 0; i < text.length(); ++i)
+        if (text[i] == delimiter)
+            ++count;
+    std::vector<string> lines;
+    lines.reserve(count + 1);
 
-    /*
+    for (int i = 0; i < text.length();)
+    {
+        int j = i;
+        while (j < text.length() && text[j] != delimiter) ++j;
+        lines.emplace_back(j - i > 0 ? text.substr(i, j - i) : string(""));
+        i = j + 1;
+    }
+    if (text[text.length() - 1] == delimiter)
+        lines.push_back("");
+    return lines;
+    /* StackOverflow:
     std::vector<string> lines;
     auto start = 0U;
     auto end = text.find(delimiter);
@@ -249,33 +230,26 @@ string NANO::Files::read_file(string abs_file_path)
 	ifs.close();
 	return file_content;
 }
+std::vector<string> NANO::Files::read_file_lines(string abs_file_path)
+{
+    string content = NANO::Files::read_file(abs_file_path);
+    NANO::Str::remove(content, '\r');
+	return NANO::Str::split(content, '\n');
+}
 
-/*
-    je li kontrolni znak
-    int is_control(int char_code);
-        case 8:
-            // BACKSPACE
-        case 9:
-            // HORIZONTAL TAB
-        case 10:
-            // ENTER
-        case 27:
-            // ESCAPE
-        case 224:
-            return 1;
-            break;
-
-    Printable ASCII:
-    ! " # $ % & ' ( ) * + , - . / 
-    0 1 2 3 4 5 6 7 8 9 : ; < = > ? 
-    @ A B C D E F G H I J K L M N O 
-    P Q R S T U V W X Y Z [ \ ] ^ _ 
-    ` a b c d e f g h i j k l m n o 
-    p q r s t u v w x y z { | } ~
-    int is_printable(int char_code)
+Nano::Nano(std::vector<string> content, int width, int height, char border, char background) : buffer(content), ekran(Ekran(width, height, border, background)), message(string())
+{
+    if (buffer.size() == 0)
     {
-        return char_code > 31 && char_code < 127;
+        buffer.push_back("");
     }
-*/
+
+    for (int i = 0; i < buffer.size(); ++i)
+    {
+        // // Keep replacing tabs in row until all have been removed
+        // while(NANO::Str::replace(buffer[i], "\t", "    ") == true);
+        NANO::Str::remove(buffer[i], '\r');
+    }
+}
 
 #endif

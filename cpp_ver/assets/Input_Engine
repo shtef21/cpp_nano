@@ -8,9 +8,58 @@
 // ceil()
 #include <math.h>
 
+using std::string;
 typedef unsigned char uchar;
 
-using std::string;
+
+/* PAGINATION
+
+    the screen can fit at maximum HEIGHT_WRITEABLE lines
+    therefore buffer consists of BUFFER_SIZE / HEIGHT_WRITEABLE + 1 pages
+    to get current page
+
+    Example:
+
+    buffer = {
+        "foo",
+        "bar",
+        "row3",
+        "",
+        "hello!"
+    }
+    screen:
+    XXXXXXXXXX  
+    X        X  
+    X        X
+    XXXXXXXXXX
+    all pages:
+    XXXXXXXXXX XXXXXXXXXX XXXXXXXXXX  
+    Xfoo     X Xrow3    X Xhello!  X
+    Xbar     X X        X X        X
+    XXXXXXXXXX XXXXXXXXXX XXXXXXXXXX
+
+    writeable height = 2
+    buffer size = 5
+    ptr_y = 0, 1... 2, 3... 4, 5
+    y/w_h = 0, 0... 1, 1... 2, 2
+
+    curr_page_start_idx = writeable_height * (ptr_y / writeable_height)
+    (programming != math so writeable_height cannot be crossed out)
+*/
+
+namespace NANO
+{
+    struct CH
+    {
+    public:
+        // Single characters
+        static const uchar ESC=27, ENTER=13, DELETE=8, TAB='\t';
+        // Preceded by code 224:
+        static const uchar REVERSE_DEL=83, ARROW_UP=72, ARROW_DOWN=80, ARROW_LEFT=75, ARROW_RIGHT=77, PAGE_UP=73, PAGE_DOWN=81;
+        static bool is_control(int ch_code);
+        static bool is_printable(int ch_code);
+    };
+}
 
 class Input_Engine
 {
@@ -19,404 +68,352 @@ private:
     // (as of now only used in pagination implementation)
     Ekran& ekran_ref;
     std::vector<string>& buffer_ref;
-    int &ptr_x, &ptr_y;
-
-    class Pages
-    {
-        // TODO: move members to private, add getters and make_pages, page_up, page_down to public
-//    private:
-public:
-        unsigned char curr_page;
-        unsigned char last_page;
-//    public:
-        Pages() = delete;
-        Pages(unsigned char curr_page, unsigned char last_page) : curr_page(curr_page), last_page(last_page)
-        {
-            if (curr_page > last_page)
-                curr_page = last_page;
-        }
-    } pagination;
-    
-    struct CH
-    {
-    public:
-        // Sole characters
-        static const uchar ESC=27, ENTER=13, DELETE=8, TAB='\t';
-        // Preceded by code 224:
-        static const uchar REVERSE_DEL=83, ARROW_UP=72, ARROW_DOWN=80, ARROW_LEFT=75, ARROW_RIGHT=77, PAGE_UP=73, PAGE_DOWN=81;
-
-        static bool is_esc(int ch_code)
-        {
-            return ch_code == 27;
-        }
-        static bool is_tab(int ch_code)
-        {
-            return ch_code == '\t';
-        }
-        static bool is_control(int ch_code)
-        {
-            switch(ch_code)
-            {
-            case 8:
-                // BACKSPACE
-            case 9:
-                // HORIZONTAL TAB
-            case 10:
-                // ENTER
-            case 27:
-                // ESCAPE
-            case 224:
-                return true;
-                break;
-            }
-            return false;
-        }
-        // '\t' not included
-        static bool is_printable(int ch_code)
-        {
-            // Printable ASCII: ! " # $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~
-            return ch_code > 31 && ch_code < 127;
-        }
-    };
-
-    inline void make_pages()
-    {
-        pagination.last_page = ceil(buffer_ref.size() / (float) ekran_ref.get_height_writeable());
-        if (pagination.curr_page > pagination.last_page)
-            pagination.curr_page = pagination.last_page;
-    }
+    // Coordinates (indexes) of buffer
+    int ptr_x, ptr_y;
 
 public:
     Input_Engine() = delete;
+    Input_Engine(std::vector<string>& buffer_ref, Ekran& ekran_ref);
 
-    Input_Engine(std::vector<string>& buffer_ref, int& screen_ptr_x_ref, int& screen_ptr_y_ref, Ekran& ekran_ref) : buffer_ref(buffer_ref), ptr_x(screen_ptr_x_ref), ptr_y(screen_ptr_y_ref), ekran_ref(ekran_ref), pagination(Pages(1, ceil(buffer_ref.size() / (float) ekran_ref.get_height_writeable())))
-    {
-        // Point cursor to the top left;
-        ptr_x = ptr_y = 1;
-    }
+    std::vector<string>::iterator paginated_start();
+    std::vector<string>::iterator paginated_end();
 
-    std::vector<string>::iterator paginated_start()
-    {
-        // lines per page - ekran_ref.get_height_writeable()
-        int start_idx = (pagination.curr_page - 1) * ekran_ref.get_height_writeable();
-        return buffer_ref.begin() + start_idx;
-    }
-    std::vector<string>::iterator paginated_end()
-    {
-        int start_idx = (pagination.curr_page - 1) * ekran_ref.get_height_writeable();
-        int count = ekran_ref.get_height_writeable();
+    inline int get_virtual_x_idx();
+    inline int get_virtual_y_idx();
 
-        if (start_idx + count < buffer_ref.size())
-            return buffer_ref.begin() + (start_idx + count);
-        else
-            return buffer_ref.end();
-    }
+    int get_and_process_input();
 
-    inline string& get_curr_line(int ptr_y_coord)
-    {
-        return buffer_ref[(pagination.curr_page - 1) * ekran_ref.get_height_writeable() + ptr_y_coord - 1];
-    }
-    inline int get_real_y(int ptr_y_coord)
-    {
-        return (pagination.curr_page - 1) * ekran_ref.get_height_writeable() + ptr_y_coord;
-    }
-
-    int get_and_process_input()
-    {
-        int ch = getch();
-        std::cout << (int)ch << "\n";
-        process_input(ch);
-        return ch;
-    }
-
-    inline void process_input(int ch)
-    {
-        if (ch == 224)
-        {
-            switch(getch())
-            {
-            case CH::ARROW_UP:
-                pointer_up();
-                break;
-            case CH::ARROW_DOWN:
-                pointer_down();
-                break;
-            case CH::ARROW_LEFT:
-                pointer_left();
-                break;
-            case CH::ARROW_RIGHT:
-                pointer_right();
-                break;
-            case CH::REVERSE_DEL:
-                // reverse_delete=true
-                delete_char(true);
-                break;
-            case CH::PAGE_UP:
-                page_up();
-                break;
-            case CH::PAGE_DOWN:
-                page_down();
-                break;
-            default:
-                std::cout << "Unrecognised or forbidden control character.\n";
-                break;
-            }
-        }
-        else if(CH::is_printable(ch))
-        {
-            add_char(ch);
-        }
-        else
-        {
-            switch(ch)
-            {
-                case CH::TAB:
-                    add_string("    ");
-                    break;
-                case CH::ESC:
-                    break;
-                case CH::ENTER:
-                    if (ptr_y > buffer_ref.size())
-                    {
-                        buffer_ref.push_back("");
-                        ptr_y = buffer_ref.size();
-                        ptr_x = 1;
-                    }
-                    else
-                    {
-                        if (ptr_x > buffer_ref[ptr_y - 1].length())
-                            add_new_line();
-                        else
-                        {
-                            string split_string = buffer_ref[ptr_y - 1].substr(ptr_x - 1);
-                            buffer_ref[ptr_y - 1] = buffer_ref[ptr_y - 1].substr(0, ptr_x - 1);
-                            add_new_line(split_string);
-                        }
-                    }
-                    break;
-                case CH::DELETE:
-                    delete_char();
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
+    inline void debug_pointer();
     inline void pointer_left();
     inline void pointer_right();
     inline void pointer_up();
     inline void pointer_down();
 
+    inline int get_current_page_number();
+    inline int get_total_pages_number();
     inline void page_up();
     inline void page_down();
 
     inline void add_char(int ch);
-    inline void delete_char(bool reverse_delete=false);
-    inline void add_string(const string& s);
+    inline void delete_char();
+    inline void reverse_delete_char();
+    // inline void add_string(const string& s);
     inline void add_new_line(string initial_str=string());
 };
 
 // ---------------------------------- IMPLEMENTATION ---------------------------------- //
 
+Input_Engine::Input_Engine(std::vector<string>& buffer_ref, Ekran& ekran_ref) : buffer_ref(buffer_ref), ptr_x(0), ptr_y(0), ekran_ref(ekran_ref)
+{
+
+}
+
+std::vector<string>::iterator Input_Engine::paginated_start()
+{
+    // Page index goes from 0 to and including (buffer size / writeable height + 1)
+    int page_idx = ptr_y / this->ekran_ref.get_height_writeable();
+    return buffer_ref.begin() + (page_idx * this->ekran_ref.get_height_writeable());
+}
+std::vector<string>::iterator Input_Engine::paginated_end()
+{
+    // if this is not last page, return next page start, otherwise return buffer end
+    int current_page = this->get_current_page_number();
+    if (current_page < this->get_total_pages_number())
+        return this->buffer_ref.begin() + (current_page * this->ekran_ref.get_height_writeable());
+    else
+        return this->buffer_ref.end();
+}
+
+int Input_Engine::get_and_process_input()
+{
+    int ch = getch();
+    if (ch == 224)
+    {
+        switch(getch())
+        {
+        case NANO::CH::ARROW_UP:
+            pointer_up();
+            break;
+        case NANO::CH::ARROW_DOWN:
+            pointer_down();
+            break;
+        case NANO::CH::ARROW_LEFT:
+            pointer_left();
+            break;
+        case NANO::CH::ARROW_RIGHT:
+            pointer_right();
+            break;
+        case NANO::CH::REVERSE_DEL:
+            reverse_delete_char();
+            break;
+        case NANO::CH::PAGE_UP:
+            page_up();
+            break;
+        case NANO::CH::PAGE_DOWN:
+            page_down();
+            break;
+        default:
+            std::cout << "Unrecognised or forbidden control character.\n";
+            break;
+        }
+    }
+    else if(NANO::CH::is_printable(ch) || ch == NANO::CH::TAB)
+    {
+        add_char(ch);
+    }
+    else
+    {
+        switch(ch)
+        {
+            // case NANO::CH::TAB:
+            //     // add_string("    ");
+            //     break;
+            case NANO::CH::ESC:
+                break;
+            case NANO::CH::ENTER:
+                if (ptr_y >= buffer_ref.size())
+                {
+                    buffer_ref.push_back("");
+                    ptr_y = buffer_ref.size() - 1;
+                    ptr_x = 0;
+                }
+                else
+                {
+                    if (ptr_x >= buffer_ref[ptr_y].length())
+                        add_new_line();
+                    else
+                    {
+                        string split_string = buffer_ref[ptr_y].substr(ptr_x);
+                        buffer_ref[ptr_y] = buffer_ref[ptr_y].substr(0, ptr_x);
+                        add_new_line(split_string);
+                    }
+                }
+                break;
+            case NANO::CH::DELETE:
+                delete_char();
+                break;
+            default:
+                break;
+        }
+    }
+    return ch;
+}
+
+// ptr_x adjusted for screen width (because of tabs)
+inline int Input_Engine::get_virtual_x_idx()
+{
+    if (this->buffer_ref[ptr_y].length() == 0)
+        return 0;
+        
+    int virtual_x = 0;
+    for (int i = 0; i < this->buffer_ref[ptr_y].length() && i < ptr_x; ++i)
+        if (this->buffer_ref[ptr_y][i] == '\t')
+            do ++virtual_x; while (virtual_x % 4 != 1);
+        else
+            ++virtual_x;
+    return virtual_x;
+    // return this->ptr_x % (this->ekran_ref.get_width_writeable());
+}
+// ptr_y adjusted for screen height (translate from 0->buff.size() to 0->ekran.writeable_height())
+inline int Input_Engine::get_virtual_y_idx()
+{
+    return this->ptr_y % (this->ekran_ref.get_height_writeable());
+}
+
+// Check if pointer need be changed
+inline void Input_Engine::debug_pointer()
+{
+    bool inform_of_error = true;
+    if (ptr_y < 0)
+    {
+        ptr_y = ptr_x = 0;
+    }
+    else if (ptr_y >= this->buffer_ref.size())
+    {
+        ptr_y = this->buffer_ref.size() - 1;
+        ptr_x = this->buffer_ref[ptr_y].length();
+    }
+    else if (ptr_x < 0)
+    {
+        ptr_x = 0;
+    }
+    else if (ptr_x > this->buffer_ref[ptr_y].length())
+    {
+        ptr_x = this->buffer_ref[ptr_y].length();
+    }
+    else
+    {
+        // Else it's okay
+        inform_of_error = false;
+    }
+
+    if (inform_of_error)
+    {
+        std::cout << "\nThere has been an error with the pointer.\nPress any key to continue...";
+        getch();
+    }
+}
 inline void Input_Engine::pointer_left()
 {
-    if (ptr_y == 1 && ptr_x == 1 && pagination.curr_page == 1);
-    else if (ptr_y == 1 && ptr_x == 1 && pagination.curr_page > 1)
-    {
-        page_up();
-        ptr_y = ekran_ref.get_height_writeable();
-        ptr_x = buffer_ref[pagination.curr_page * ekran_ref.get_height_writeable() - 1].length() + 1;
-    }
-    else if (ptr_x == 1)
+    // if pointer at top left corner
+    // else if line beginning
+    // else
+    if (ptr_y == 0 && ptr_x == 0);
+    else if (ptr_x == 0)
     {
         --ptr_y;
-        ptr_x = get_curr_line(ptr_y).length() + 1;
+        ptr_x = this->buffer_ref[ptr_y].length();
     }
     else --ptr_x;
 }
 inline void Input_Engine::pointer_right()
 {
-    if (pagination.curr_page < pagination.last_page && ptr_y == ekran_ref.get_height_writeable() && ptr_x == buffer_ref[ptr_y - 1].length() + 1)
-    {
-        ptr_y = ptr_x = 1;
-        page_down();
-    }
-    else if (pagination.curr_page == pagination.last_page && ptr_y == buffer_ref.size() % ekran_ref.get_height_writeable() && ptr_x == buffer_ref[buffer_ref.size() - 1].length() + 1);
-    else if (ptr_x == get_curr_line(ptr_y).length() + 1)
+    // if pointer at last character + 1
+    // else if pointer at last character of current line
+    // else
+    if (ptr_y == buffer_ref.size() - 1 && ptr_x == this->buffer_ref[ptr_y].length());
+    else if (ptr_x == buffer_ref[ptr_y].length())
     {
         ++ptr_y;
-        ptr_x = 1;
+        ptr_x = 0;
     }
     else ++ptr_x;
 }
 inline void Input_Engine::pointer_up()
 {
-    if (ptr_y == 1 && pagination.curr_page != 1)
+    // if current line is first line
+    // else if ptr_x is bigger than the previous line
+    // else
+    if (ptr_y == 0);
+    else if (ptr_x > this->buffer_ref[ptr_y - 1].length())
     {
-        ptr_y = ekran_ref.get_height_writeable();
-        page_up();
-    }
-    else if (ptr_y == 1);
-    else if (ptr_x > get_curr_line(ptr_y - 1).length() + 1)
-    {
-        ptr_x = get_curr_line(ptr_y - 1).length() + 1;
+        ptr_x = this->buffer_ref[ptr_y - 1].length();
         --ptr_y;
     }
     else --ptr_y;
 }
 inline void Input_Engine::pointer_down()
 {
-    if (ptr_y == ekran_ref.get_height_writeable() && pagination.curr_page < pagination.last_page)
+    // if current line is last line
+    // else if ptr_x is bigger than the next line
+    // else
+    if (ptr_y == this->buffer_ref[ptr_y].size() - 1);
+    else if (ptr_x > this->buffer_ref[ptr_y].length())
     {
-        ptr_y = 1;
-        page_down();
-    }
-    else if (pagination.last_page == pagination.curr_page && ptr_y == buffer_ref.size() % ekran_ref.get_height_writeable());
-    else if (ptr_x > get_curr_line(ptr_y).length() + 1)
-    {
-        ptr_x = get_curr_line(ptr_y).length() + 1;
+        ptr_x = buffer_ref[ptr_y].length();
         ++ptr_y;
     }
     else ++ptr_y;
 }
 
+inline int Input_Engine::get_current_page_number()
+{
+    return this->ptr_y / this->ekran_ref.get_height_writeable() + 1;
+}
+inline int Input_Engine::get_total_pages_number()
+{
+    return this->buffer_ref.size() / this->ekran_ref.get_height_writeable() + 1;
+}
 inline void Input_Engine::page_up()
 {
-    if (pagination.curr_page > 1)
-        --pagination.curr_page;
+    if (this->get_current_page_number() > 1)
+    {
+        ptr_y -= this->ekran_ref.get_height_writeable();
+        if (ptr_x > this->buffer_ref[ptr_y].length())
+        {
+            ptr_x = this->buffer_ref[ptr_y].length();
+        }
+    }
 }
 inline void Input_Engine::page_down()
 {
-    if (pagination.curr_page < pagination.last_page)
-        ++pagination.curr_page;
+    if (this->get_current_page_number() < this->get_total_pages_number())
+    {
+        ptr_y += this->ekran_ref.get_height_writeable();
+    }
 }
 
 inline void Input_Engine::add_char(int ch)
 {
-    if (ptr_y <= buffer_ref.size())
+    // Insert character at buffer_ref[ptr_y][ptr_x]
+    buffer_ref[ptr_y].insert(ptr_x, 1, char(ch));
+    ++ptr_x;
+}
+
+// Delete character at buffer[ptr_y][ptr_x]
+inline void Input_Engine::delete_char()
+{ 
+    // if pointer is at first character of first line
+    // else if pointer is at first character of current line
+    // else
+    if (ptr_y == 0 && ptr_x == 0);
+    else if (ptr_x == 0)
     {
-        if (ptr_x - 1 > get_curr_line(ptr_y).length())
-            ptr_x = get_curr_line(ptr_y).length() + 1;
-        get_curr_line(ptr_y).insert(ptr_x - 1, {char(ch)});
-        ++ptr_x;
+        this->buffer_ref[ptr_y - 1] += this->buffer_ref[ptr_y];
+        this->buffer_ref.erase(this->buffer_ref.begin() + ptr_y);
+        --ptr_y;
+        ptr_x = this->buffer_ref[ptr_y].length();
+    }
+    else
+    {
+        this->buffer_ref[ptr_y].erase(ptr_x - 1, 1);
+        --ptr_x;
     }
 }
 
-inline void Input_Engine::delete_char(bool reverse_delete)
+inline void Input_Engine::reverse_delete_char()
 {
-    int real_y = (pagination.curr_page - 1) * ekran_ref.get_height_writeable() + ptr_y;
-
-    std::cout << "real_y=" << real_y << " ptr_y=" << ptr_y << "\n";
-    if (real_y - 1 < buffer_ref.size())
+    // if pointer is at last character of last line
+    // else if pointer is at last character + 1 of current line
+    // else
+    if (ptr_y == this->buffer_ref.size() - 1 && ptr_x == this->buffer_ref[ptr_y].length());
+    else if (ptr_x == this->buffer_ref[ptr_y].length())
     {
-        if (ptr_x == 1 && reverse_delete == false)
-        {
-            if (real_y != 1)
-            {
-                string saved = get_curr_line(ptr_y).substr(ptr_x - 1);
-                buffer_ref.erase(buffer_ref.begin() + real_y - 1);
-                --ptr_y;
-                if (ptr_y == 0)
-                {
-                    ptr_y = ekran_ref.get_height_writeable();
-                    page_up();
-                    make_pages();
-                }
-                --real_y;
-                ptr_x = get_curr_line(ptr_y).length() + 1;
-                get_curr_line(ptr_y) += saved;
-            }
-        }
-        else if (ptr_x - 1 == get_curr_line(ptr_y).length() && reverse_delete == true)
-        {
-            if (real_y != buffer_ref.size())
-            {
-                get_curr_line(ptr_y) += get_curr_line(ptr_y + 1);
-                buffer_ref.erase(buffer_ref.begin() + real_y - 1);
-            }
-        }
-        else if (ptr_x > get_curr_line(ptr_y).length())
-        {
-            if (reverse_delete == false)
-            {
-                get_curr_line(ptr_y) = get_curr_line(ptr_y).substr(0, get_curr_line(ptr_y).length() - 1);
-                ptr_x = get_curr_line(ptr_y).length() + 1;
-            }
-            else
-            {
-                get_curr_line(ptr_y) += get_curr_line(ptr_y + 1);
-                buffer_ref.erase(buffer_ref.begin() + real_y - 1);
-            }
-        }
-        else
-        {
-            if (!reverse_delete)
-            {
-                buffer_ref[ptr_y - 1] = buffer_ref[ptr_y - 1].substr(0, ptr_x - 2) + buffer_ref[ptr_y - 1].substr(ptr_x - 1);
-                --ptr_x;
-            }
-            else
-            {
-                buffer_ref[ptr_y - 1] = buffer_ref[ptr_y - 1].substr(0, ptr_x - 1) + buffer_ref[ptr_y - 1].substr(ptr_x);
-            }
-        }
+        this->buffer_ref[ptr_y] += this->buffer_ref[ptr_y + 1];
+        this->buffer_ref.erase(this->buffer_ref.begin() + ptr_y + 1);
     }
-
-    /*
-    if (ptr_y - 1 < buffer_ref.size() || pagination.curr_page < pagination.last_page)
+    else
     {
-        if (ptr_x == 1 && reverse_delete == false)
-        {
-            if (ptr_y != 1)
-            {
-                string saved = buffer_ref[ptr_y - 1].substr(ptr_x - 1);
-                buffer_ref.erase(buffer_ref.begin() + ptr_y - 1);
-                --ptr_y;
-                ptr_x = buffer_ref[ptr_y - 1].length() + 1;
-                buffer_ref[ptr_y - 1] += saved;
-            }
-        }
-        else if (ptr_x - 1 == buffer_ref[ptr_y - 1].length() && reverse_delete == true)
-        {
-            if (ptr_y != buffer_ref.size())
-            {
-                buffer_ref[ptr_y - 1] += buffer_ref[ptr_y];
-                buffer_ref.erase(buffer_ref.begin() + ptr_y - 1);
-            }
-        }
-        else if (ptr_x > buffer_ref[ptr_y - 1].length())
-        {
-            buffer_ref[ptr_y - 1] = buffer_ref[ptr_y - 1].substr(0, buffer_ref[ptr_y - 1].length() - 1);
-            ptr_x = buffer_ref[ptr_y - 1].length() + 1;
-        }
-        else
-        {                
-            buffer_ref[ptr_y - 1] = buffer_ref[ptr_y - 1].substr(0, ptr_x - 1) + buffer_ref[ptr_y - 1].substr(ptr_x);
-            if (!reverse_delete)
-            {
-                --ptr_x;
-            }
-        }
+        this->buffer_ref[ptr_y].erase(ptr_x, 1);
     }
-    */
 }
 
-inline void Input_Engine::add_string(const string& s)
-{
-    if (ptr_x - 1 > buffer_ref[ptr_y - 1].length())
-        ptr_x = buffer_ref[ptr_y - 1].length() + 1;
-    buffer_ref[ptr_y - 1].insert(ptr_x - 1, s);
-    ptr_x += s.length() + 1; // ++ptr_x;
-}
+// inline void Input_Engine::add_string(const string& s)
+// {
+//     buffer_ref[ptr_y].insert(ptr_x, s);
+//     ptr_x += s.length();
+// }
 
 inline void Input_Engine::add_new_line(string initial_str)
 {
-    if (ptr_y > buffer_ref.size())
-        ptr_y = buffer_ref.size();
     buffer_ref.insert(buffer_ref.begin() + ptr_y, initial_str);
     ++ptr_y;
-    ptr_x = 1;
+    ptr_x = 0;
+}
+
+bool NANO::CH::is_control(int ch_code)
+{
+    switch(ch_code)
+    {
+    case 8:
+        // BACKSPACE
+    case 9:
+        // HORIZONTAL TAB
+    case 10:
+        // ENTER
+    case 27:
+        // ESCAPE
+    case 224:
+        return true;
+        break;
+    }
+    return false;
+}
+// '\t' not included
+bool NANO::CH::is_printable(int ch_code)
+{
+    // Printable ASCII: ! " # $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~
+    return ch_code > 31 && ch_code < 127;
 }
 
 #endif

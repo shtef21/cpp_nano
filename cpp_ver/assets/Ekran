@@ -85,8 +85,19 @@ public:
         int idx = 0;
         while (idx < s.length() && x_coord > 0 && x_coord < width - 1)
         {
-            _ch(x_coord, y_coord) = s[idx];
-            ++x_coord;
+            if (s[idx] != '\t')
+            {
+                _ch(x_coord, y_coord) = s[idx];
+                ++x_coord;
+            }
+            else
+            {
+                do
+                {
+                    _ch(x_coord, y_coord) = ' ';
+                    ++x_coord;
+                } while(x_coord % 4 != 1);
+            }
             ++idx;
         }
     }
