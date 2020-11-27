@@ -97,6 +97,7 @@ public:
     inline void add_char(int ch);
     inline void delete_char();
     inline void reverse_delete_char();
+    void process_newline();
     // inline void add_string(const string& s);
     inline void add_new_line(string initial_str=string());
 };
@@ -110,9 +111,7 @@ Input_Engine::Input_Engine(std::vector<string>& buffer_ref, Ekran& ekran_ref) : 
 
 std::vector<string>::iterator Input_Engine::paginated_start()
 {
-    // Page index goes from 0 to and including (buffer size / writeable height + 1)
-    int page_idx = ptr_y / this->ekran_ref.get_height_writeable();
-    return buffer_ref.begin() + (page_idx * this->ekran_ref.get_height_writeable());
+    return buffer_ref.begin() + ((this->get_current_page_number() - 1) * this->ekran_ref.get_height_writeable());
 }
 std::vector<string>::iterator Input_Engine::paginated_end()
 {
@@ -387,6 +386,24 @@ inline void Input_Engine::reverse_delete_char()
     else
     {
         this->buffer_ref[ptr_y].erase(ptr_x, 1);
+    }
+}
+
+inline void Input_Engine::process_newline()
+{
+    if (ptr_x == this->buffer_ref[ptr_y].length())
+    {
+	if(this->buffer_ref[ptr_y] > 0 && this->buffer_ref[ptr_y][ptr_x-1] == '{')
+	{
+	    string initial = this->buffer_ref[ptr_y].substr(0, ptr_x-1);
+	    // TODO: replace addition of "    " with \t
+	    // add appropriate number of tabs
+	    this->buffer_ref.add_new_line(initial + "    ");
+	    this->buffer_ref.add_new_line(initial + '}');
+	    --ptr_y;
+	    ptr_x = this->buffer_ref[ptr_y].length();
+	}
+	else this->buffer_ref.add_new_line();
     }
 }
 
