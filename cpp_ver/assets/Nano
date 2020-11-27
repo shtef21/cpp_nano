@@ -54,7 +54,7 @@ private:
 
 public:
 
-    Nano(std::vector<string> content=std::vector<string>(), int width=115, int height=30, char border='@', char background=' ');
+    Nano(std::vector<string> content=std::vector<string>(), int width=120, int height=30, char border='@', char background=' ');
 
     void run()
     {

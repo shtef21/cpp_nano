@@ -70,6 +70,7 @@ private:
     std::vector<string>& buffer_ref;
     // Coordinates (indexes) of buffer
     int ptr_x, ptr_y;
+    int prev_char;
 
 public:
     Input_Engine() = delete;
@@ -129,7 +130,7 @@ int Input_Engine::get_and_process_input()
     int ch = getch();
     if (ch == 224)
     {
-        switch(getch())
+        switch((ch = getch()))
         {
         case NANO::CH::ARROW_UP:
             pointer_up();
@@ -160,6 +161,7 @@ int Input_Engine::get_and_process_input()
     else if(NANO::CH::is_printable(ch) || ch == NANO::CH::TAB)
     {
         add_char(ch);
+        this->prev_char = ch;
     }
     else
     {
@@ -171,23 +173,24 @@ int Input_Engine::get_and_process_input()
             case NANO::CH::ESC:
                 break;
             case NANO::CH::ENTER:
-                if (ptr_y >= buffer_ref.size())
-                {
-                    buffer_ref.push_back("");
-                    ptr_y = buffer_ref.size() - 1;
-                    ptr_x = 0;
-                }
-                else
-                {
-                    if (ptr_x >= buffer_ref[ptr_y].length())
-                        add_new_line();
-                    else
-                    {
-                        string split_string = buffer_ref[ptr_y].substr(ptr_x);
-                        buffer_ref[ptr_y] = buffer_ref[ptr_y].substr(0, ptr_x);
-                        add_new_line(split_string);
-                    }
-                }
+                this->process_newline();
+                // if (ptr_y >= buffer_ref.size())
+                // {
+                //     buffer_ref.push_back("");
+                //     ptr_y = buffer_ref.size() - 1;
+                //     ptr_x = 0;
+                // }
+                // else
+                // {
+                //     if (ptr_x >= buffer_ref[ptr_y].length())
+                //         add_new_line();
+                //     else
+                //     {
+                //         string split_string = buffer_ref[ptr_y].substr(ptr_x);
+                //         buffer_ref[ptr_y] = buffer_ref[ptr_y].substr(0, ptr_x);
+                //         add_new_line(split_string);
+                //     }
+                // }
                 break;
             case NANO::CH::DELETE:
                 delete_char();
@@ -335,17 +338,6 @@ inline void Input_Engine::page_down()
 
 inline void Input_Engine::add_char(int ch)
 {
-    // Insert character at buffer_ref[ptr_y][ptr_x]
-    // if (buffer_ref[ptr_y].length() == 0)
-    //     buffer_ref[ptr_y] = string() + char(ch);
-    // else if (ptr_x == 0)
-    //     buffer_ref[ptr_y] = char(ch) + buffer_ref[ptr_y];
-    // else if (ptr_x == buffer_ref[ptr_y].length())
-    //     buffer_ref[ptr_y] += char(ch);
-    // else
-    //     buffer_ref[ptr_y] = buffer_ref[ptr_y].substr(0, ptr_x) + char(ch) + buffer_ref[ptr_y].substr(ptr_x);
-    // ++ptr_x;
-        
     buffer_ref[ptr_y].insert(ptr_x, 1, char(ch));
     // if (ptr_x >= buffer_ref[ptr_y].length())
     //     buffer_ref[ptr_y] += char(ch);
@@ -360,10 +352,10 @@ inline void Input_Engine::delete_char()
     if (ptr_y == 0 && ptr_x == 0);
     else if (ptr_x == 0)
     {
+        ptr_x = this->buffer_ref[ptr_y - 1].length();
         this->buffer_ref[ptr_y - 1] += this->buffer_ref[ptr_y];
         this->buffer_ref.erase(this->buffer_ref.begin() + ptr_y);
         --ptr_y;
-        ptr_x = this->buffer_ref[ptr_y].length();
     }
     else
     {
@@ -391,19 +383,21 @@ inline void Input_Engine::reverse_delete_char()
 
 inline void Input_Engine::process_newline()
 {
-    if (ptr_x == this->buffer_ref[ptr_y].length())
+    if (ptr_x == 0)
     {
-	if(this->buffer_ref[ptr_y] > 0 && this->buffer_ref[ptr_y][ptr_x-1] == '{')
-	{
-	    string initial = this->buffer_ref[ptr_y].substr(0, ptr_x-1);
-	    // TODO: replace addition of "    " with \t
-	    // add appropriate number of tabs
-	    this->buffer_ref.add_new_line(initial + "    ");
-	    this->buffer_ref.add_new_line(initial + '}');
-	    --ptr_y;
-	    ptr_x = this->buffer_ref[ptr_y].length();
-	}
-	else this->buffer_ref.add_new_line();
+        this->add_new_line(this->buffer_ref[ptr_y]);
+        buffer_ref[ptr_y - 1] = string();
+    }
+    else if (ptr_x == this->buffer_ref[ptr_y].length())
+    {
+        this->add_new_line();
+    }
+    else
+    {
+        string p1 = this->buffer_ref[ptr_y].substr(0, ptr_x);
+        string p2 = this->buffer_ref[ptr_y].substr(ptr_x);
+        this->buffer_ref[ptr_y] = p1;
+        this->add_new_line(p2);
     }
 }
 
@@ -415,7 +409,7 @@ inline void Input_Engine::process_newline()
 
 inline void Input_Engine::add_new_line(string initial_str)
 {
-    buffer_ref.insert(buffer_ref.begin() + ptr_y, initial_str);
+    buffer_ref.insert(buffer_ref.begin() + ptr_y + 1, initial_str);
     ++ptr_y;
     ptr_x = 0;
 }
