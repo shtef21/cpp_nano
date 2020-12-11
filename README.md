@@ -1,7 +1,7 @@
 # cpp_nano
 A work in progress console text editor written in C++. Made for Windows and programmed using Microsoft Visual Studio IDE.
 
-## structure
+## Structure
 
 Files:
 * Char_Engine.h
@@ -12,5 +12,7 @@ Files:
 * Nano.h
 * curr_dir.h
 * vs_cpp_nano.cpp
+
+## Program flow
 
 ![Image of the structure](/img.png)
