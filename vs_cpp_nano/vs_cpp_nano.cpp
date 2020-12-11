@@ -24,8 +24,14 @@ int main(int argc, char* argv[])
         std::cout << "You are missing the file name.\n";
         exit(EXIT_FAILURE);
     }*/
-    //string abs_file_path = NANO::Files::get_curr_dir() + argv[1];
-    string abs_file_path = "C:/Users/stjep/OneDrive/Dokumenti/GitHub/cpp_nano/vs_cpp_nano/Debug/abc.txt";
+    string abs_file_path = NANO::Files::get_curr_dir() + argv[1];
+    
+    // Make dummy file for testing
+    abs_file_path = "abc.txt";
+    system(&(string() + "echo #include ^<stdio.h^> > " + abs_file_path)[0]);
+    system(&(string() + "echo. >> " + abs_file_path)[0]);
+    system(&(string() + "echo // Write code here >> " + abs_file_path)[0]);
+
     std::vector<string> lines = NANO::Files::read_file_lines(abs_file_path);
 
     Nano nano(lines);
