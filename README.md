@@ -3,7 +3,7 @@ A work in progress console text editor written in C++. Made for Windows and prog
 
 ## Demo
 
-![Demo image](/img.png)
+![Demo image](/demo.png)
 
 ## Structure
 
