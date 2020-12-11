@@ -39,3 +39,6 @@ vs_cpp_nano/vs_cpp_nano.sln
 vs_cpp_nano/vs_cpp_nano.vcxproj
 vs_cpp_nano/vs_cpp_nano.vcxproj.filters
 vs_cpp_nano/vs_cpp_nano.vcxproj.user
+vs_cpp_nano/.vs/vs_cpp_nano/v16/Browse.VC.db-shm
+vs_cpp_nano/.vs/vs_cpp_nano/v16/Browse.VC.db-wal
+vs_cpp_nano/.vs/vs_cpp_nano/v16/Browse.VC.opendb

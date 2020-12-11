@@ -6,7 +6,6 @@
 #include <conio.h>
 #include <vector>
 #include <string>
-#include "Ekran.h"
 #include "Input_Engine.h"
 #include "Console_Cursor.h"
 // ceil()
