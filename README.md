@@ -1,6 +1,10 @@
 # cpp_nano
 A work in progress console text editor written in C++. Made for Windows and programmed using Microsoft Visual Studio IDE.
 
+## Demo
+
+![Demo image](/demo.png)
+
 ## Structure
 
 1. Char_Engine.h
