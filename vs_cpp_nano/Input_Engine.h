@@ -6,6 +6,8 @@
 #include <conio.h>
 #include <vector>
 #include <string>
+#include <Windows.h>
+
 #include "Input_Engine.h"
 #include "Console_Cursor.h"
 // ceil()
