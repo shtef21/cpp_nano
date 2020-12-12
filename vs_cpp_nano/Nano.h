@@ -1,6 +1,4 @@
 #pragma once
-#ifndef NANO_CPP_MAIN
-#define NANO_CPP_MAIN
 
 #ifdef _WIN32
 #define NANO_CPP_MAIN_LINE_FEED_TEXT "\n\r"
@@ -9,11 +7,12 @@
 #endif
 
 #include <iostream>
+#include <stdio.h>
+#include <filesystem>
 #include <fstream>
 #include <algorithm>
 #include <vector>
 #include <conio.h>
-#include <stdio.h>
 #include "Console_CI_Manager.h"
 #include "Input_Engine.h"
 #include "Console_Cursor.h"
@@ -51,62 +50,26 @@ namespace NANO
 class Nano
 {
 private:
-    string message;
     // TODO: zamijeniti vector sa linked list strukturom zbog ubacivanja usred popisa
     std::vector<string> buffer;
+    string abs_file_path;
+
+    std::vector<string>&& make_buffer(std::vector<string>&& rvector);
+    string get_content();
+    void ending_dialogue(string abs_file_path, string content);
 
 public:
+    Nano(string file_name);
+    Nano(std::vector<string> content = std::vector<string>());
+    ~Nano();
 
-    Nano(std::vector<string> content = std::vector<string>()); //, int width = 120, int height = 40, char border = '@', char background = ' ');
-
-    void run()
-    {
-        std::cout << "Press any button to start and ESCAPE to exit.\nThis program switches all tabs to four spaces.\n";
-
-        Console_Cursor cursor = { 0, 0 };
-        Console_CI_Manager console = Console_CI_Manager();
-        Input_Engine engine(this->buffer, console.get_writeable_height(), console.get_characters_per_line());
-
-        int ch = _getch();
-        // while char not ESCAPE
-        while (ch != 27)
-        {
-            cursor.set_values(engine.get_x_idx(), engine.get_y_idx());
-
-            if (engine.is_text_marked())
-                console.set_lines_coloured(engine.paginated_start(), engine.paginated_end(), cursor, 1, 1, engine.get_marked_start_pos());
-            else
-                console.set_lines(engine.paginated_start(), engine.paginated_end(), cursor);
-
-            console.show();
-            ch = engine.get_and_process_input();
-        }
-    }
-
-    string get_content()
-    {
-        if (buffer.size() == 0)
-            return "";
-        if (buffer.size() == 1)
-            return buffer[0];
-
-        int size = 0;
-        for (auto it = buffer.begin(); it != buffer.end(); ++it)
-            size += it->length();
-
-        string output;
-        output.reserve(size);
-
-        output += buffer[0];
-        for (auto it = buffer.begin() + 1; it != buffer.end(); ++it)
-        {
-            output += NANO_CPP_MAIN_LINE_FEED_TEXT + *it;
-        }
-        return output;
-    }
-
-    ~Nano() {}
+    void run();
 };
+
+
+
+
+// ------------------------- IMPLEMENTATION ------------------------- //
 
 bool NANO::Str::replace(std::string& str, const std::string& from, const std::string& to)
 {
@@ -237,20 +200,140 @@ std::vector<string> NANO::Files::read_file_lines(string abs_file_path)
     return NANO::Str::split(content, '\n');
 }
 
-// , int width, int height, char border, char background) : buffer(content), ekran(Ekran(width, height, border, background)), message(string())
-Nano::Nano(std::vector<string> content) : buffer(content)
+std::vector<string>&& Nano::make_buffer(std::vector<string>&& rvector)
 {
-    if (buffer.size() == 0)
+    if (rvector.size() == 0)
     {
-        buffer.push_back("");
+        rvector.push_back("");
     }
-
-    for (int i = 0; i < buffer.size(); ++i)
+    for (int i = 0; i < rvector.size(); ++i)
     {
         // // Keep replacing tabs in row until all have been removed
-        // while(NANO::Str::replace(buffer[i], "\t", "    ") == true);
-        NANO::Str::remove(buffer[i], '\r');
+        // while(NANO::Str::replace(rvector[i], "\t", "    ") == true);
+        NANO::Str::remove(rvector[i], '\r');
+    }
+    return std::move(rvector);
+}
+
+string Nano::get_content()
+{
+    if (buffer.size() == 0)
+        return "";
+    if (buffer.size() == 1)
+        return buffer[0];
+
+    int size = 0;
+    for (auto it = buffer.begin(); it != buffer.end(); ++it)
+        size += it->length();
+
+    string output;
+    output.reserve(size);
+
+    output += buffer[0];
+    for (auto it = buffer.begin() + 1; it != buffer.end(); ++it)
+    {
+        output += NANO_CPP_MAIN_LINE_FEED_TEXT + *it;
+    }
+    return output;
+}
+
+void Nano::ending_dialogue(string abs_file_path, string content)
+{
+    std::cout << "Write file out (y/N)? ";
+    char c = 0;
+    std::cin >> c;
+
+    if (c == 'y' || c == 'Y')
+    {
+        bool write_again = true;
+
+        while (write_again)
+        {
+            std::ofstream ofs(abs_file_path, std::ios::out | std::ios::trunc);
+
+            if (ofs.is_open())
+            {
+                ofs << content;
+                std::cout << "\nContent successfully written.\n";
+                write_again = false;
+                ofs.close();
+            }
+            else
+            {
+                write_again = false;
+                std::cout << "\nOpening failed. press (r) to repeat, or anything else to waste content...\n";
+                c = _getch();
+                if (c == 'r')
+                    write_again = true;
+            }
+        }
+
     }
 }
 
-#endif
+Nano::Nano(std::vector<string> content) : buffer(this->make_buffer(std::move(content)))
+{
+
+}
+
+Nano::Nano(string file_name)
+{
+    // if "\..." or ".:\"
+    //     path is relative (convert to absolute)
+    // else
+    //     path is already absolute
+    if (file_name[0] != '\\' || (file_name[1] != ':' && file_name[2] != '\\'))
+        this->abs_file_path = NANO::Files::get_curr_dir() + file_name;
+    else
+        this->abs_file_path = file_name;
+
+    try
+    {
+        std::vector<string> lines = NANO::Files::read_file_lines(abs_file_path);
+        this->buffer = this->make_buffer(std::move(lines));
+    }
+    catch (...)
+    {
+        this->abs_file_path = "";
+        this->buffer = { "" };
+        std::cout << "Error while opening file.\nEmpty buffer will be open. Press any key to continue...\n";
+        _getch();
+    }
+}
+
+Nano::~Nano()
+{
+
+}
+
+void Nano::run()
+{
+    std::cout << "Welcome to CPP Nano.\nSource code: https://www.github.com/shtef21/cpp_nano" << "\n\n";
+    std::cout << "Resize the screen and adjust the font size.\n";
+    std::cout << "Press any button to start and ESCAPE to exit.\n";
+    _getch();
+
+    // This is scoped because Console_CI_Manager must be destroyed in order to 
+    // reset console handle to default handler and properly call this->ending_dialogue(...)
+    {
+        Console_Cursor cursor = { 0, 0 };
+        Console_CI_Manager console = Console_CI_Manager();
+        Input_Engine engine(this->buffer, console.get_writeable_height(), console.get_characters_per_line());
+
+        int ch = 0;
+        // while char not ESCAPE
+        while (ch != 27)
+        {
+            cursor.set_values(engine.get_x_idx(), engine.get_y_idx());
+
+            if (engine.is_text_marked())
+                console.set_lines_coloured(engine.paginated_start(), engine.paginated_end(), cursor, 1, 1, engine.get_marked_start_pos());
+            else
+                console.set_lines(engine.paginated_start(), engine.paginated_end(), cursor);
+
+            console.show();
+            ch = engine.get_and_process_input();
+        }
+    }
+    this->ending_dialogue(this->abs_file_path, this->get_content());
+}

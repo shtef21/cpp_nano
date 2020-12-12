@@ -141,8 +141,28 @@ public:
 		delete[] this->screen_buffer;
 		system("cls");
 	}
-	Console_CI(int w=120, int h=40, bool set_font=false, int fw=8, int fh=16)
+	Console_CI(int w=0, int h=0, bool set_font=false, int fw=0, int fh=0)
 	{
+		if (w == 0 || h == 0)
+		{
+			CONSOLE_SCREEN_BUFFER_INFO csbi;
+			GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+			w = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+			h = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+			// Get
+		}
+		if (fw == 0 || fh == 0)
+		{
+			CONSOLE_FONT_INFO cfi;
+			GetCurrentConsoleFont(
+				GetStdHandle(STD_OUTPUT_HANDLE),
+				FALSE,
+				&cfi
+			);
+			fw = cfi.dwFontSize.X;
+			fh = cfi.dwFontSize.Y;
+		}
+
 		// Initialise variables
 		this->_width = w;
 		this->_height = h;

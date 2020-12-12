@@ -1,3 +1,4 @@
+ECHO is on.
 #include <stdio.h> 
  
 // Write code here 
