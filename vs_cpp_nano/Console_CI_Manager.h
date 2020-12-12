@@ -20,10 +20,19 @@ private:
 	// This value may be used to avoid unnecessarily setting the pointer (for now it is not used)
 	//Console_Cursor previous_cursor;
 
-//public:
-//	int get_w() const { return _w; }
-//	int get_h() const { return _h; }
-//private:
+	// Index as shown on screen (each char is 1, but '\t' is 1-4 spaces)
+	int adjusted_idx_until(std::string s, int ch_boundary)
+	{
+		if (s.length() == 0)
+			return 0;
+		int scr_idx = 0;
+		for (int i = 0; i < s.length() && i < ch_boundary; ++i)
+			if (s[i] == '\t')
+				scr_idx += 4 - i % 4;
+			else
+				++scr_idx;
+		return scr_idx;
+	}
 
 	// Foreground = text color
 	FOREGROUND fg_text_area, fg_wall, fg_dark_grey;
@@ -84,8 +93,8 @@ public:
 		if (mark_from == Console_Cursor::empty())
 			mark_from = cursor;
 
-		// TODO:
-		//     make mark_until and set mark_from/mark_until based on cursor and mark_from values
+		Console_Cursor mark_to = cursor;
+		Console_Cursor::set_min_max(mark_from, mark_to);
 
 		clear_screen();
 		int cnt = 0;
@@ -95,35 +104,7 @@ public:
 		for (auto it = begin; it != end && y + cnt < y_max; ++it, ++cnt, ++lines_written)
 		{
 			std::string to_write;
-
-			if (cursor == mark_from)
-				to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_text_area);
-			else
-			{
-				if (cnt == mark_from.line_idx)
-				{
-					// Mark second half
-					std::string p1, p2;
-					p1 = it->substr(0, mark_from.ch_idx);
-					p2 = it->substr(mark_from.ch_idx);
-					to_write = console.draw_string_constrained(x, y + cnt, x_max, p1, true, fg_text_area, bg_text_area);
-					to_write = console.draw_string_constrained(x + p1.length(), y + cnt, x_max, p2, true, fg_text_area, bg_marked_ch);
-				}
-				else if (cnt == cursor.line_idx)
-				{
-					// Mark first half
-					std::string p1, p2;
-					p1 = it->substr(0, cursor.ch_idx);
-					p2 = it->substr(cursor.ch_idx);
-					to_write = console.draw_string_constrained(x, y + cnt, x_max, p1, true, fg_text_area, bg_marked_ch);
-					to_write = console.draw_string_constrained(x + p1.length(), y + cnt, x_max, p2, true, fg_text_area, bg_text_area);
-				}
-				else
-				{
-					// Mark entire line
-					to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_marked_ch);
-				}
-			}
+			to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_text_area);
 
 			chars_written = (*it).length() - to_write.length();
 			// TODO: take tabs in account
@@ -145,6 +126,18 @@ public:
 				}
 				else;
 			}
+		}
+		// Mark lines
+		if (mark_from != mark_to)
+		{
+			console.draw_attr(
+				adjusted_idx_until(*(begin + mark_from.line_idx), mark_from.ch_idx) + 1,
+				mark_from.line_idx + 1, fg_text_area, bg_marked_ch
+			);
+			console.draw_attr(
+				adjusted_idx_until(*(begin + mark_to.line_idx), mark_to.ch_idx) + 1,
+				mark_to.line_idx + 1, fg_text_area, bg_marked_ch
+			);
 		}
 	}
 

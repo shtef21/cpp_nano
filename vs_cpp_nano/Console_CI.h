@@ -268,6 +268,11 @@ public:
 			this->screen_buffer[y * this->_width + x].Attributes = fg | bg;
 		}
 	}
+	void draw_attr(int x, int y, FOREGROUND fg, BACKGROUND bg)
+	{
+		if (x >= 0 && x < this->_width && y >= 0 && y < this->_height)
+			this->screen_buffer[y * this->_width + x].Attributes = fg | bg;
+	}
 	void draw_char(int x, int y, short c = SOLID_CHAR::FULL)
 	{
 		if (x >= 0 && x < this->_width && y >= 0 && y < this->_height)

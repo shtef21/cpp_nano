@@ -7,7 +7,7 @@
 
 // https://docs.microsoft.com/en-gb/windows/win32/api/winuser/nf-winuser-getkeyboardstate
 
-struct Char_Engine
+namespace Char_Engine
 {
 	//static PBYTE lpKeyState;
 
@@ -17,4 +17,4 @@ struct Char_Engine
 	bool rcontrol() { GetAsyncKeyState(VK_RCONTROL) & 0x8000; }
 	bool lmenu() { GetAsyncKeyState(VK_LMENU) & 0x8000; }
 	bool rmenu() { GetAsyncKeyState(VK_RMENU) & 0x8000; }
-};
+}

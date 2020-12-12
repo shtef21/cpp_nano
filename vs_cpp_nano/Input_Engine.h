@@ -10,6 +10,7 @@
 
 #include "Input_Engine.h"
 #include "Console_Cursor.h"
+#include "Char_Engine.h"
 // ceil()
 #include <math.h>
 
@@ -101,6 +102,7 @@ private:
     int prev_char;
     int lines_per_page;
     int characters_per_line;
+    std::vector<string> copied_text;
 
     /*
         Issue with moving cursor line up or down (char '_' represents cursor, [tab] is '\t' char):
@@ -156,6 +158,8 @@ public:
     inline void page_up();
     inline void page_down();
 
+    inline void copy_text();
+    inline void paste_text();
     inline void add_char(int ch);
     inline void delete_char();
     inline void reverse_delete_char();
@@ -167,7 +171,7 @@ public:
 // ---------------------------------- IMPLEMENTATION ---------------------------------- //
 
 Input_Engine::Input_Engine(std::vector<string>& buffer_ref, int _lpg, int _cpl) : buffer_ref(buffer_ref), ptr_x(0), ptr_y(0), lines_per_page(_lpg), characters_per_line(_cpl),
-marked_start_pos(0, 0)
+marked_start_pos(Console_Cursor::empty())
 {
     text_marked_flag = false;
 }
@@ -230,8 +234,22 @@ int Input_Engine::get_and_process_input()
     }
     else if (NANO::CH::is_printable(ch) || ch == NANO::CH::CH_TAB)
     {
-        add_char(ch);
-        this->prev_char = ch;
+        if (Char_Engine::lcontrol())
+        {
+            if ((ch == 'c' || ch == 'C'))
+            {
+
+            }
+            else if ((ch == 'v' || ch == 'V'))
+            {
+
+            }
+        }
+        else
+        {
+            add_char(ch);
+            this->prev_char = ch;
+        }
     }
     else
     {
@@ -430,6 +448,22 @@ inline void Input_Engine::page_down()
     {
         ptr_y += this->lines_per_page;
     }
+}
+
+inline void Input_Engine::copy_text()
+{
+    Console_Cursor& mark_min = this->marked_start_pos;
+    Console_Cursor mark_max(ptr_x, ptr_y);
+    Console_Cursor::set_min_max(mark_min, mark_max);
+    this->copied_text = std::vector<string>(
+        buffer_ref[mark_min.line_idx].begin() + mark_min.ch_idx,
+        buffer_ref[mark_max.line_idx].begin() + mark_max.ch_idx
+    );
+}
+
+inline void Input_Engine::paste_text()
+{
+
 }
 
 inline void Input_Engine::add_char(int ch)
