@@ -76,61 +76,16 @@ public:
 		console.set_cursor(x, y);
 	}
 
-	void set_lines(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end, Console_Cursor& cursor, int x = 1, int y = 1)
+	void set_lines(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end, const Console_Cursor& cursor, int x, int y, Console_Cursor mark_from = Console_Cursor::empty())
 	{
 		if (x < x_min || y < y_min || x > x_max || y > y_max)
 			return;
-		clear_screen();
+		// There are no marked lines
+		if (mark_from == Console_Cursor::empty())
+			mark_from = cursor;
 
-		std::string to_write;
-		int cnt = 0;
-		// lines_written and chars_written is used for setting the cursor
-		int lines_written = 0;
-		int chars_written = 0;
-		for (auto it = begin; it != end && y + cnt < y_max; ++it, ++cnt, ++lines_written)
-		{
-			// the method returns part of the string that has not been written
-			to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_text_area);
-			chars_written = (*it).length() - to_write.length();
-
-			// Keep writing until the entire string is written (or max height reached)
-			while (to_write.length() > 0 && y + cnt < y_max)
-			{
-				++cnt;
-				console.draw(x, y + cnt, '+', fg_dark_grey, bg_wall);
-
-				int ch_written_this_time = to_write.length();
-				to_write = console.draw_string_constrained(x + 1, y + cnt, x_max, to_write, true, fg_text_area, bg_text_area);
-				chars_written += ch_written_this_time - to_write.length();
-			}
-
-			// TODO: take tabs in account
-			// Set cursor if it matches line
-			if (lines_written == cursor.line_idx)
-			{
-				// If the entire line fits in one line of the screen
-				// Else (buffer line spans several screen lines)
-				//     calculate proper (x, y) - UNFINISHED
-				if (chars_written == it->length())
-				{
-					int x_pos = 0;
-					for (int i = 0; i < it->length() && i < cursor.ch_idx; ++i)
-						if ((*it)[i] == '\t')
-							x_pos += 4 - (x_pos % 4);
-						else
-							++x_pos;
-					set_cursor(x_pos + 1, y + cnt);
-				}
-				else;
-			}
-		}
-	}
-
-	// Mark some lines in special colour
-	void set_lines_coloured(std::vector<std::string>::iterator begin, std::vector<std::string>::iterator end, const Console_Cursor& cursor, int x, int y, Console_Cursor mark_from)
-	{
-		if (x < x_min || y < y_min || x > x_max || y > y_max)
-			return;
+		// TODO:
+		//     make mark_until and set mark_from/mark_until based on cursor and mark_from values
 
 		clear_screen();
 		int cnt = 0;
@@ -140,21 +95,35 @@ public:
 		for (auto it = begin; it != end && y + cnt < y_max; ++it, ++cnt, ++lines_written)
 		{
 			std::string to_write;
-			// TODO: Finish the second and the third IF condition
-			if (cnt > cursor.line_idx && cnt < cursor.line_idx)
-			{
-				to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_marked_ch);
-			}
-			else if (cnt == mark_from.line_idx)
-			{
-				to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_marked_ch);
-			}
-			else if (cnt == cursor.line_idx)
-			{
-				to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_marked_ch);
-			}
-			else
+
+			if (cursor == mark_from)
 				to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_text_area);
+			else
+			{
+				if (cnt == mark_from.line_idx)
+				{
+					// Mark second half
+					std::string p1, p2;
+					p1 = it->substr(0, mark_from.ch_idx);
+					p2 = it->substr(mark_from.ch_idx);
+					to_write = console.draw_string_constrained(x, y + cnt, x_max, p1, true, fg_text_area, bg_text_area);
+					to_write = console.draw_string_constrained(x + p1.length(), y + cnt, x_max, p2, true, fg_text_area, bg_marked_ch);
+				}
+				else if (cnt == cursor.line_idx)
+				{
+					// Mark first half
+					std::string p1, p2;
+					p1 = it->substr(0, cursor.ch_idx);
+					p2 = it->substr(cursor.ch_idx);
+					to_write = console.draw_string_constrained(x, y + cnt, x_max, p1, true, fg_text_area, bg_marked_ch);
+					to_write = console.draw_string_constrained(x + p1.length(), y + cnt, x_max, p2, true, fg_text_area, bg_text_area);
+				}
+				else
+				{
+					// Mark entire line
+					to_write = console.draw_string_constrained(x, y + cnt, x_max, *it, true, fg_text_area, bg_marked_ch);
+				}
+			}
 
 			chars_written = (*it).length() - to_write.length();
 			// TODO: take tabs in account

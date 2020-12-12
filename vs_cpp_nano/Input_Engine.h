@@ -161,7 +161,7 @@ public:
     inline void reverse_delete_char();
     void process_newline();
     // inline void add_string(const string& s);
-    inline void add_new_line(string initial_str = string());
+    inline void add_new_line(string initial_str, bool indent_line = false);
 };
 
 // ---------------------------------- IMPLEMENTATION ---------------------------------- //
@@ -489,7 +489,17 @@ inline void Input_Engine::process_newline()
     }
     else if (ptr_x >= this->buffer_ref[ptr_y].length())
     {
-        this->add_new_line();
+        // If line starts with tabs, then copy the tabs
+        string s = "";
+        int last_tab_pos = -1;
+        for (int i = 0; i < buffer_ref[ptr_y].length(); ++i)
+            if (buffer_ref[ptr_y][i] == '\t')
+                last_tab_pos = i;
+            else if (buffer_ref[ptr_y][i] != ' ') break;
+
+        if (last_tab_pos != -1)
+            s = buffer_ref[ptr_y].substr(0, last_tab_pos + 1);
+        this->add_new_line(s, true);
     }
     else
     {
@@ -500,7 +510,7 @@ inline void Input_Engine::process_newline()
     }
 }
 
-inline void Input_Engine::add_new_line(string initial_str)
+inline void Input_Engine::add_new_line(string initial_str, bool indent_line)
 {
     buffer_ref.reserve(int((buffer_ref.size() + initial_str.length()) * 1.2) + 1);
     if (ptr_y >= buffer_ref.size())
@@ -508,7 +518,10 @@ inline void Input_Engine::add_new_line(string initial_str)
     else
         buffer_ref.insert(buffer_ref.begin() + ptr_y + 1, initial_str);
     ++ptr_y;
-    ptr_x = 0;
+    if (indent_line)
+        ptr_x = buffer_ref[ptr_y].length();
+    else
+        ptr_x = 0;
 }
 
 bool NANO::CH::is_control(int ch_code)

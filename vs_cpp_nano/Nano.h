@@ -326,10 +326,10 @@ void Nano::run()
         {
             cursor.set_values(engine.get_x_idx(), engine.get_y_idx());
 
-            if (engine.is_text_marked())
-                console.set_lines_coloured(engine.paginated_start(), engine.paginated_end(), cursor, 1, 1, engine.get_marked_start_pos());
-            else
-                console.set_lines(engine.paginated_start(), engine.paginated_end(), cursor);
+            console.set_lines(
+                engine.paginated_start(), engine.paginated_end(), cursor, 1, 1,
+                engine.is_text_marked() ? engine.get_marked_start_pos() : Console_Cursor::empty()
+            );
 
             console.show();
             ch = engine.get_and_process_input();
