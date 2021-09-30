@@ -4,173 +4,190 @@
 
 namespace Keypress
 {
+
 	// Taken from https://docs.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 	// Alternatively enter WinUser.h file
-	namespace is_pressed
-	{
-		bool lmouse() { return GetAsyncKeyState(VK_LBUTTON) & 0x8000; }
-		bool rmouse() { return GetAsyncKeyState(VK_RBUTTON) & 0x8000; }
-		bool backspace() { return GetAsyncKeyState(VK_BACK) & 0x8000; }
-		bool tab() { return GetAsyncKeyState(VK_TAB) & 0x8000; }
-		bool enter() { return GetAsyncKeyState(VK_RETURN) & 0x8000; }
-		bool shift() { return GetAsyncKeyState(VK_SHIFT) & 0x8000; }
-		bool ctrl() { return GetAsyncKeyState(VK_CONTROL) & 0x8000; }
-		bool alt() { return GetAsyncKeyState(VK_MENU) & 0x8000; }
-		bool caps_lock() { return GetAsyncKeyState(VK_CAPITAL) & 0x8000; }
-		bool escape() { return GetAsyncKeyState(VK_ESCAPE) & 0x8000; }
-		bool spacebar() { return GetAsyncKeyState(VK_SPACE) & 0x8000; }
-		bool page_up() { return GetAsyncKeyState(VK_PRIOR) & 0x8000; }
-		bool page_down() { return GetAsyncKeyState(VK_NEXT) & 0x8000; }
-		bool end_key() { return GetAsyncKeyState(VK_END) & 0x8000; }
-		bool home_key() { return GetAsyncKeyState(VK_HOME) & 0x8000; }
-		bool arrow_left() { return GetAsyncKeyState(VK_LEFT) & 0x8000; }
-		bool arrow_right() { return GetAsyncKeyState(VK_RIGHT) & 0x8000; }
-		bool arrow_up() { return GetAsyncKeyState(VK_UP) & 0x8000; }
-		bool arrow_down() { return GetAsyncKeyState(VK_DOWN) & 0x8000; }
-		bool select_all() { return GetAsyncKeyState(VK_SELECT) & 0x8000; }
-		bool print() { return GetAsyncKeyState(VK_PRINT) & 0x8000; }
-		bool print_scr() { return GetAsyncKeyState(VK_SNAPSHOT) & 0x8000; }
-		bool insert() { return GetAsyncKeyState(VK_INSERT) & 0x8000; }
-		bool delete_key() { return GetAsyncKeyState(VK_DELETE) & 0x8000; }
-
-		bool num_0() { return GetAsyncKeyState(0x30) & 0x8000; }
-		bool num_1() { return GetAsyncKeyState(0x31) & 0x8000; }
-		bool num_2() { return GetAsyncKeyState(0x32) & 0x8000; }
-		bool num_3() { return GetAsyncKeyState(0x33) & 0x8000; }
-		bool num_4() { return GetAsyncKeyState(0x34) & 0x8000; }
-		bool num_5() { return GetAsyncKeyState(0x35) & 0x8000; }
-		bool num_6() { return GetAsyncKeyState(0x36) & 0x8000; }
-		bool num_7() { return GetAsyncKeyState(0x37) & 0x8000; }
-		bool num_8() { return GetAsyncKeyState(0x38) & 0x8000; }
-		bool num_9() { return GetAsyncKeyState(0x39) & 0x8000; }
-		bool numpad_0() { return GetAsyncKeyState(VK_NUMPAD0) & 0x8000; }
-		bool numpad_1() { return GetAsyncKeyState(VK_NUMPAD1) & 0x8000; }
-		bool numpad_2() { return GetAsyncKeyState(VK_NUMPAD2) & 0x8000; }
-		bool numpad_3() { return GetAsyncKeyState(VK_NUMPAD3) & 0x8000; }
-		bool numpad_4() { return GetAsyncKeyState(VK_NUMPAD4) & 0x8000; }
-		bool numpad_5() { return GetAsyncKeyState(VK_NUMPAD5) & 0x8000; }
-		bool numpad_6() { return GetAsyncKeyState(VK_NUMPAD6) & 0x8000; }
-		bool numpad_7() { return GetAsyncKeyState(VK_NUMPAD7) & 0x8000; }
-		bool numpad_8() { return GetAsyncKeyState(VK_NUMPAD8) & 0x8000; }
-		bool numpad_9() { return GetAsyncKeyState(VK_NUMPAD9) & 0x8000; }
-		bool numpad_mul() { return GetAsyncKeyState(VK_MULTIPLY) & 0x8000; }
-		bool numpad_add() { return GetAsyncKeyState(VK_ADD) & 0x8000; }
-		bool numpad_sub() { return GetAsyncKeyState(VK_SUBTRACT) & 0x8000; }
-		bool numpad_div() { return GetAsyncKeyState(VK_DIVIDE) & 0x8000; }
-		bool F1() { return GetAsyncKeyState(VK_F1) & 0x8000; }
-		bool F2() { return GetAsyncKeyState(VK_F2) & 0x8000; }
-		bool F3() { return GetAsyncKeyState(VK_F3) & 0x8000; }
-		bool F4() { return GetAsyncKeyState(VK_F4) & 0x8000; }
-		bool F5() { return GetAsyncKeyState(VK_F5) & 0x8000; }
-		bool F6() { return GetAsyncKeyState(VK_F6) & 0x8000; }
-		bool F7() { return GetAsyncKeyState(VK_F7) & 0x8000; }
-		bool F8() { return GetAsyncKeyState(VK_F8) & 0x8000; }
-		bool F9() { return GetAsyncKeyState(VK_F9) & 0x8000; }
-		bool F10() { return GetAsyncKeyState(VK_F10) & 0x8000; }
-		bool F11() { return GetAsyncKeyState(VK_F11) & 0x8000; }
-		bool F12() { return GetAsyncKeyState(VK_F12) & 0x8000; }
-		bool F13() { return GetAsyncKeyState(VK_F13) & 0x8000; }
-		bool F14() { return GetAsyncKeyState(VK_F14) & 0x8000; }
-		bool F15() { return GetAsyncKeyState(VK_F15) & 0x8000; }
-		bool F16() { return GetAsyncKeyState(VK_F16) & 0x8000; }
-		bool F17() { return GetAsyncKeyState(VK_F17) & 0x8000; }
-		bool F18() { return GetAsyncKeyState(VK_F18) & 0x8000; }
-		bool F19() { return GetAsyncKeyState(VK_F19) & 0x8000; }
-		bool F20() { return GetAsyncKeyState(VK_F20) & 0x8000; }
-		bool F21() { return GetAsyncKeyState(VK_F21) & 0x8000; }
-		bool F22() { return GetAsyncKeyState(VK_F22) & 0x8000; }
-		bool F23() { return GetAsyncKeyState(VK_F23) & 0x8000; }
-		bool F24() { return GetAsyncKeyState(VK_F24) & 0x8000; }
-		
-		bool lshift() { return GetAsyncKeyState(VK_LSHIFT) & 0x8000; }
-		bool rshift() { return GetAsyncKeyState(VK_RSHIFT) & 0x8000; }
-		bool lcontrol() { return GetAsyncKeyState(VK_LCONTROL) & 0x8000; }
-		bool rcontrol() { return GetAsyncKeyState(VK_RCONTROL) & 0x8000; }
-		bool lmenu() { return GetAsyncKeyState(VK_LMENU) & 0x8000; }
-		bool rmenu() { return GetAsyncKeyState(VK_RMENU) & 0x8000; }
-	}
-
 	namespace keyup
 	{
-		bool lmouse() { return GetAsyncKeyState(VK_LBUTTON) & 0x0001; }
-		bool rmouse() { return GetAsyncKeyState(VK_RBUTTON) & 0x0001; }
-		bool backspace() { return GetAsyncKeyState(VK_BACK) & 0x0001; }
-		bool tab() { return GetAsyncKeyState(VK_TAB) & 0x0001; }
-		bool enter() { return GetAsyncKeyState(VK_RETURN) & 0x0001; }
-		bool shift() { return GetAsyncKeyState(VK_SHIFT) & 0x0001; }
-		bool ctrl() { return GetAsyncKeyState(VK_CONTROL) & 0x0001; }
-		bool alt() { return GetAsyncKeyState(VK_MENU) & 0x0001; }
-		bool caps_lock() { return GetAsyncKeyState(VK_CAPITAL) & 0x0001; }
-		bool escape() { return GetAsyncKeyState(VK_ESCAPE) & 0x0001; }
-		bool spacebar() { return GetAsyncKeyState(VK_SPACE) & 0x0001; }
-		bool page_up() { return GetAsyncKeyState(VK_PRIOR) & 0x0001; }
-		bool page_down() { return GetAsyncKeyState(VK_NEXT) & 0x0001; }
-		bool end_key() { return GetAsyncKeyState(VK_END) & 0x0001; }
-		bool home_key() { return GetAsyncKeyState(VK_HOME) & 0x0001; }
-		bool arrow_left() { return GetAsyncKeyState(VK_LEFT) & 0x0001; }
-		bool arrow_right() { return GetAsyncKeyState(VK_RIGHT) & 0x0001; }
-		bool arrow_up() { return GetAsyncKeyState(VK_UP) & 0x0001; }
-		bool arrow_down() { return GetAsyncKeyState(VK_DOWN) & 0x0001; }
-		bool select_all() { return GetAsyncKeyState(VK_SELECT) & 0x0001; }
-		bool print() { return GetAsyncKeyState(VK_PRINT) & 0x0001; }
-		bool print_scr() { return GetAsyncKeyState(VK_SNAPSHOT) & 0x0001; }
-		bool insert() { return GetAsyncKeyState(VK_INSERT) & 0x0001; }
-		bool delete_key() { return GetAsyncKeyState(VK_DELETE) & 0x0001; }
 
-		bool num_0() { return GetAsyncKeyState(0x30) & 0x0001; }
-		bool num_1() { return GetAsyncKeyState(0x31) & 0x0001; }
-		bool num_2() { return GetAsyncKeyState(0x32) & 0x0001; }
-		bool num_3() { return GetAsyncKeyState(0x33) & 0x0001; }
-		bool num_4() { return GetAsyncKeyState(0x34) & 0x0001; }
-		bool num_5() { return GetAsyncKeyState(0x35) & 0x0001; }
-		bool num_6() { return GetAsyncKeyState(0x36) & 0x0001; }
-		bool num_7() { return GetAsyncKeyState(0x37) & 0x0001; }
-		bool num_8() { return GetAsyncKeyState(0x38) & 0x0001; }
-		bool num_9() { return GetAsyncKeyState(0x39) & 0x0001; }
-		bool numpad_0() { return GetAsyncKeyState(VK_NUMPAD0) & 0x0001; }
-		bool numpad_1() { return GetAsyncKeyState(VK_NUMPAD1) & 0x0001; }
-		bool numpad_2() { return GetAsyncKeyState(VK_NUMPAD2) & 0x0001; }
-		bool numpad_3() { return GetAsyncKeyState(VK_NUMPAD3) & 0x0001; }
-		bool numpad_4() { return GetAsyncKeyState(VK_NUMPAD4) & 0x0001; }
-		bool numpad_5() { return GetAsyncKeyState(VK_NUMPAD5) & 0x0001; }
-		bool numpad_6() { return GetAsyncKeyState(VK_NUMPAD6) & 0x0001; }
-		bool numpad_7() { return GetAsyncKeyState(VK_NUMPAD7) & 0x0001; }
-		bool numpad_8() { return GetAsyncKeyState(VK_NUMPAD8) & 0x0001; }
-		bool numpad_9() { return GetAsyncKeyState(VK_NUMPAD9) & 0x0001; }
-		bool numpad_mul() { return GetAsyncKeyState(VK_MULTIPLY) & 0x0001; }
-		bool numpad_add() { return GetAsyncKeyState(VK_ADD) & 0x0001; }
-		bool numpad_sub() { return GetAsyncKeyState(VK_SUBTRACT) & 0x0001; }
-		bool numpad_div() { return GetAsyncKeyState(VK_DIVIDE) & 0x0001; }
-		bool F1() { return GetAsyncKeyState(VK_F1) & 0x0001; }
-		bool F2() { return GetAsyncKeyState(VK_F2) & 0x0001; }
-		bool F3() { return GetAsyncKeyState(VK_F3) & 0x0001; }
-		bool F4() { return GetAsyncKeyState(VK_F4) & 0x0001; }
-		bool F5() { return GetAsyncKeyState(VK_F5) & 0x0001; }
-		bool F6() { return GetAsyncKeyState(VK_F6) & 0x0001; }
-		bool F7() { return GetAsyncKeyState(VK_F7) & 0x0001; }
-		bool F8() { return GetAsyncKeyState(VK_F8) & 0x0001; }
-		bool F9() { return GetAsyncKeyState(VK_F9) & 0x0001; }
-		bool F10() { return GetAsyncKeyState(VK_F10) & 0x0001; }
-		bool F11() { return GetAsyncKeyState(VK_F11) & 0x0001; }
-		bool F12() { return GetAsyncKeyState(VK_F12) & 0x0001; }
-		bool F13() { return GetAsyncKeyState(VK_F13) & 0x0001; }
-		bool F14() { return GetAsyncKeyState(VK_F14) & 0x0001; }
-		bool F15() { return GetAsyncKeyState(VK_F15) & 0x0001; }
-		bool F16() { return GetAsyncKeyState(VK_F16) & 0x0001; }
-		bool F17() { return GetAsyncKeyState(VK_F17) & 0x0001; }
-		bool F18() { return GetAsyncKeyState(VK_F18) & 0x0001; }
-		bool F19() { return GetAsyncKeyState(VK_F19) & 0x0001; }
-		bool F20() { return GetAsyncKeyState(VK_F20) & 0x0001; }
-		bool F21() { return GetAsyncKeyState(VK_F21) & 0x0001; }
-		bool F22() { return GetAsyncKeyState(VK_F22) & 0x0001; }
-		bool F23() { return GetAsyncKeyState(VK_F23) & 0x0001; }
-		bool F24() { return GetAsyncKeyState(VK_F24) & 0x0001; }
+		bool check(int code)
+		{
+			return GetAsyncKeyState(code) & 0x0001;
+		}
 
-		bool lshift() { return GetAsyncKeyState(VK_LSHIFT) & 0x0001; }
-		bool rshift() { return GetAsyncKeyState(VK_RSHIFT) & 0x0001; }
-		bool lcontrol() { return GetAsyncKeyState(VK_LCONTROL) & 0x0001; }
-		bool rcontrol() { return GetAsyncKeyState(VK_RCONTROL) & 0x0001; }
-		bool lmenu() { return GetAsyncKeyState(VK_LMENU) & 0x0001; }
-		bool rmenu() { return GetAsyncKeyState(VK_RMENU) & 0x0001; }
+		bool range_pressed(int start, int finish)
+		{
+			for (int i = start; i <= finish; ++i)
+			{
+				if (check(i))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+
+		bool lmouse() { return check(VK_LBUTTON); }
+		bool rmouse() { return check(VK_RBUTTON); }
+		bool backspace() { return check(VK_BACK); }
+		bool tab() { return check(VK_TAB); }
+		bool enter() { return check(VK_RETURN); }
+		bool shift() { return check(VK_SHIFT); }
+		bool ctrl() { return check(VK_CONTROL); }
+		bool alt() { return check(VK_MENU); }
+		bool caps_lock() { return check(VK_CAPITAL); }
+		bool escape() { return check(VK_ESCAPE); }
+		bool spacebar() { return check(VK_SPACE); }
+		bool page_up() { return check(VK_PRIOR); }
+		bool page_down() { return check(VK_NEXT); }
+		bool end_key() { return check(VK_END); }
+		bool home_key() { return check(VK_HOME); }
+		bool arrow_left() { return check(VK_LEFT); }
+		bool arrow_right() { return check(VK_RIGHT); }
+		bool arrow_up() { return check(VK_UP); }
+		bool arrow_down() { return check(VK_DOWN); }
+		bool select_all() { return check(VK_SELECT); }
+		bool print() { return check(VK_PRINT); }
+		bool print_scr() { return check(VK_SNAPSHOT); }
+		bool insert() { return check(VK_INSERT); }
+		bool delete_key() { return check(VK_DELETE); }
+
+		bool num_0() { return check(0x30); }
+		bool num_1() { return check(0x31); }
+		bool num_2() { return check(0x32); }
+		bool num_3() { return check(0x33); }
+		bool num_4() { return check(0x34); }
+		bool num_5() { return check(0x35); }
+		bool num_6() { return check(0x36); }
+		bool num_7() { return check(0x37); }
+		bool num_8() { return check(0x38); }
+		bool num_9() { return check(0x39); }
+		bool numpad_0() { return check(VK_NUMPAD0); }
+		bool numpad_1() { return check(VK_NUMPAD1); }
+		bool numpad_2() { return check(VK_NUMPAD2); }
+		bool numpad_3() { return check(VK_NUMPAD3); }
+		bool numpad_4() { return check(VK_NUMPAD4); }
+		bool numpad_5() { return check(VK_NUMPAD5); }
+		bool numpad_6() { return check(VK_NUMPAD6); }
+		bool numpad_7() { return check(VK_NUMPAD7); }
+		bool numpad_8() { return check(VK_NUMPAD8); }
+		bool numpad_9() { return check(VK_NUMPAD9); }
+		bool numpad_mul() { return check(VK_MULTIPLY); }
+		bool numpad_add() { return check(VK_ADD); }
+		bool numpad_sub() { return check(VK_SUBTRACT); }
+		bool numpad_div() { return check(VK_DIVIDE); }
+
+		bool numpad_any() { return range_pressed(VK_NUMPAD0, VK_DIVIDE); }
+		int number_get()
+		{
+			for (int i = 0; i <= 9; ++i)
+			{
+				if (check(VK_NUMPAD0 + i) || check(0x30 + i))
+				{
+					return i;
+				}
+			}
+			return -1;
+		}
+
+		bool F1() { return check(VK_F1); }
+		bool F2() { return check(VK_F2); }
+		bool F3() { return check(VK_F3); }
+		bool F4() { return check(VK_F4); }
+		bool F5() { return check(VK_F5); }
+		bool F6() { return check(VK_F6); }
+		bool F7() { return check(VK_F7); }
+		bool F8() { return check(VK_F8); }
+		bool F9() { return check(VK_F9); }
+		bool F10() { return check(VK_F10); }
+		bool F11() { return check(VK_F11); }
+		bool F12() { return check(VK_F12); }
+		bool F13() { return check(VK_F13); }
+		bool F14() { return check(VK_F14); }
+		bool F15() { return check(VK_F15); }
+		bool F16() { return check(VK_F16); }
+		bool F17() { return check(VK_F17); }
+		bool F18() { return check(VK_F18); }
+		bool F19() { return check(VK_F19); }
+		bool F20() { return check(VK_F20); }
+		bool F21() { return check(VK_F21); }
+		bool F22() { return check(VK_F22); }
+		bool F23() { return check(VK_F23); }
+		bool F24() { return check(VK_F24); }
+		int F_get()
+		{
+			for (int i = 0; i <= VK_F24; ++i)
+			{
+				if (GetAsyncKeyState(VK_F1 + i) & 0x8000)
+				{
+					return i + 1;
+				}
+			}
+			return 0;
+		}
+		
+		bool lshift() { return check(VK_LSHIFT); }
+		bool rshift() { return check(VK_RSHIFT); }
+		bool lcontrol() { return check(VK_LCONTROL); }
+		bool rcontrol() { return check(VK_RCONTROL); }
+		bool lmenu() { return check(VK_LMENU); }
+		bool rmenu() { return check(VK_RMENU); }
+
+		bool letter_A() { return check(0x41); }
+		bool letter_B() { return check(0x42); }
+		bool letter_C() { return check(0x43); }
+		bool letter_D() { return check(0x44); }
+		bool letter_E() { return check(0x45); }
+		bool letter_F() { return check(0x46); }
+		bool letter_G() { return check(0x47); }
+		bool letter_H() { return check(0x48); }
+		bool letter_I() { return check(0x49); }
+		bool letter_J() { return check(0x4a); }
+		bool letter_K() { return check(0x4b); }
+		bool letter_L() { return check(0x4c); }
+		bool letter_M() { return check(0x4d); }
+		bool letter_N() { return check(0x4e); }
+		bool letter_O() { return check(0x4f); }
+		bool letter_P() { return check(0x50); }
+		bool letter_Q() { return check(0x51); }
+		bool letter_R() { return check(0x52); }
+		bool letter_S() { return check(0x53); }
+		bool letter_T() { return check(0x54); }
+		bool letter_U() { return check(0x55); }
+		bool letter_V() { return check(0x56); }
+		bool letter_W() { return check(0x57); }
+		bool letter_X() { return check(0x58); }
+		bool letter_Y() { return check(0x59); }
+		bool letter_Z() { return check(0x5a); }
+
+		bool letter_any()
+		{
+			unsigned short start = 0x41;
+			for (unsigned short i = start; i <= 0x5a; ++i)
+			{
+				if (check(i))
+				{
+					return true;
+				}
+			}
+			return false;
+		}
+		char letter_get()
+		{
+			unsigned short start = 0x41;
+			for (unsigned short i = start; i <= 0x5a; ++i)
+			{
+				if (check(i))
+				{
+					return i;
+				}
+			}
+			return 0;
+		}
+	}
+
+	namespace is_pressed
+	{
+		// TODO: when finished, copy is_pressed and replace 0x8000 with 0x0001
 	}
 }

@@ -10,18 +10,33 @@ int main()
     
     while (!esc_pressed)
     {
-        if (is_pressed::escape())
+        if (keyup::escape())
         {
             esc_pressed = true;
         }
 
-        if (keyup::F1())
+        if (keyup::is_keyup() == false)
         {
-            std::cout << "F1 \n";
+            std::cout << "No press\n";
+            continue;
         }
-        if (is_pressed::lmouse())
+
+        char letter = keyup::letter_get();
+        if (letter != 0)
         {
-            std::cout << "Left mouse \n";
+            std::cout << letter;
+        }
+
+        int f_get = keyup::F_get();
+        if (f_get != 0)
+        {
+            std::cout << "[F" << f_get << "]";
+        }
+
+        int num_get = keyup::number_get();
+        if (num_get != -1)
+        {
+            std::cout << num_get;
         }
     }
 
