@@ -51,6 +51,17 @@ namespace Keypress
 		bool print_scr() { return check(VK_SNAPSHOT); }
 		bool insert() { return check(VK_INSERT); }
 		bool delete_key() { return check(VK_DELETE); }
+		bool sleep_key() { return check(VK_SLEEP); }
+		bool numlock() { return check(VK_NUMLOCK); }
+		bool scroll() { return check(VK_SCROLL); }
+
+		bool lshift() { return check(VK_LSHIFT); }
+		bool rshift() { return check(VK_RSHIFT); }
+		bool lctrl() { return check(VK_LCONTROL); }
+		bool rctrl() { return check(VK_RCONTROL); }
+		bool lmenu() { return check(VK_LMENU); }
+		bool rmenu() { return check(VK_RMENU); }
+
 
 		bool num_0() { return check(0x30); }
 		bool num_1() { return check(0x31); }
@@ -74,6 +85,8 @@ namespace Keypress
 		bool numpad_9() { return check(VK_NUMPAD9); }
 		bool numpad_mul() { return check(VK_MULTIPLY); }
 		bool numpad_add() { return check(VK_ADD); }
+		bool numpad_sep() { return check(VK_SEPARATOR); }
+		bool numpad_dec() { return check(VK_DECIMAL); }
 		bool numpad_sub() { return check(VK_SUBTRACT); }
 		bool numpad_div() { return check(VK_DIVIDE); }
 
@@ -125,13 +138,6 @@ namespace Keypress
 			}
 			return 0;
 		}
-		
-		bool lshift() { return check(VK_LSHIFT); }
-		bool rshift() { return check(VK_RSHIFT); }
-		bool lcontrol() { return check(VK_LCONTROL); }
-		bool rcontrol() { return check(VK_RCONTROL); }
-		bool lmenu() { return check(VK_LMENU); }
-		bool rmenu() { return check(VK_RMENU); }
 
 		bool letter_A() { return check(0x41); }
 		bool letter_B() { return check(0x42); }

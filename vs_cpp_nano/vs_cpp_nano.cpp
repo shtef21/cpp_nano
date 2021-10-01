@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include "lib/Keypress.h"
+#include "lib/ConsoleApi.h"
 
 using namespace Keypress;
 
@@ -15,28 +16,9 @@ int main()
             esc_pressed = true;
         }
 
-        if (keyup::is_keyup() == false)
+        if (keyup::arrow_right())
         {
-            std::cout << "No press\n";
-            continue;
-        }
-
-        char letter = keyup::letter_get();
-        if (letter != 0)
-        {
-            std::cout << letter;
-        }
-
-        int f_get = keyup::F_get();
-        if (f_get != 0)
-        {
-            std::cout << "[F" << f_get << "]";
-        }
-
-        int num_get = keyup::number_get();
-        if (num_get != -1)
-        {
-            std::cout << num_get;
+            Console.set_size(Console.get_width() + 1, Console.get_height());
         }
     }
 

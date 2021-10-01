@@ -139,6 +139,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="lib\ConsoleApi.h" />
     <ClInclude Include="todo_modernize\Char_Engine.h" />
     <ClInclude Include="todo_modernize\Console_CI.h" />
     <ClInclude Include="todo_modernize\Console_CI_Manager.h" />

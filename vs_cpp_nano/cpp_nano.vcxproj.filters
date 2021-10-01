@@ -39,6 +39,9 @@
     <ClInclude Include="lib\Keypress.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lib\ConsoleApi.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vs_cpp_nano.cpp">
