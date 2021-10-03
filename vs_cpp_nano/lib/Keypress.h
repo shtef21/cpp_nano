@@ -185,7 +185,7 @@ namespace Keypress
 			{
 				if (check(i))
 				{
-					return i;
+					return (char)i;
 				}
 			}
 			return 0;
