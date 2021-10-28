@@ -19,10 +19,20 @@ std::ostream& operator<<(std::ostream& out, const RECT& coord)
     return out;
 }
 
+std::ostream& operator<<(std::ostream& out, const SMALL_RECT& coord)
+{
+    out << "(" << coord.Left <<
+        ", " << coord.Top <<
+        ", " << coord.Right <<
+        ", " << coord.Bottom << ")";
+    return out;
+}
+
 int main()
 {
     bool esc_pressed = false;
-    
+    COORD size = Console.get_buffer_size();
+
     while (!esc_pressed)
     {
         if (keyup::escape())
@@ -30,35 +40,24 @@ int main()
             esc_pressed = true;
         }
 
-        if (keyup::enter())
-        {
-            std::cout << Console.get_size_buffer() << std::endl;
-        }
-        if (keyup::lshift())
-        {
-            Console.write({
-                "aaa",
-                "bbbb",
-                "cccccccc"
-                });
-        }
-
-        if (keyup::arrow_right())
-        {
-            Console.set_size_rel(+1, 0);
-        }
-        if (keyup::arrow_left())
-        {
-            Console.set_size_rel(-1, 0);
-        }
         if (keyup::arrow_up())
         {
-            Console.set_size_rel(0, -1);
+            size.X++;
+            size.Y++;
         }
         if (keyup::arrow_down())
         {
-            Console.set_size_rel(0, +1);
+            size.X--;
+            size.Y--;
         }
+
+        if (keyup::enter())
+        {
+            Console.set_buffer_size(size);
+            std::cout << "size=" << size;
+            std::cout << " console=" << Console.get_buffer_size() << std::endl;
+        }
+        
     }
 
     return 0;

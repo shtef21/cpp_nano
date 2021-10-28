@@ -46,6 +46,7 @@ namespace Keypress
 		bool arrow_right() { return check(VK_RIGHT); }
 		bool arrow_up() { return check(VK_UP); }
 		bool arrow_down() { return check(VK_DOWN); }
+		bool arrow_any() { return range_pressed(VK_LEFT, VK_DOWN); }
 		bool select_all() { return check(VK_SELECT); }
 		bool print() { return check(VK_PRINT); }
 		bool print_scr() { return check(VK_SNAPSHOT); }

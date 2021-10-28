@@ -211,7 +211,7 @@ public:
 		if (this->_width > csb_info.dwMaximumWindowSize.X)
 			this->throw_error("Screen or font width too big");
 
-		this->write_area = { 0, 0, (short)this->_width-1, (short)this->_height-1 };
+		this->write_area = { 0, 0, (short)(this->_width-1), (short)(this->_height-1) };
 		if (!SetConsoleWindowInfo(this->console_out_handle, TRUE, &this->write_area))
 			this->throw_error("Unsuccessful call of SetConsoleWindowInfo");
 
