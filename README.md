@@ -1,5 +1,5 @@
 # cpp_nano
-A work in progress console text editor written in C++. Made for Windows and programmed using Microsoft Visual Studio IDE.
+A console text editor written in C++. Made for Windows and programmed using Microsoft Visual Studio IDE.
 
 ## Demo
 
